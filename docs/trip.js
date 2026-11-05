@@ -1,6 +1,6 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 1;
+export const SEED_VERSION = 2;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#00753A', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
@@ -21,9 +21,15 @@ export const INFO = {
 };
 
 const IMG_HOTEL = [
-  { src: 'assets/t1.jpg', caption: '① PARCO 旁南改札出站：往左前方找 4-A 出口電梯' },
-  { src: 'assets/t2.jpg', caption: '② 看到 4-A 電梯：從 B1 搭到 1 樓地面' },
-  { src: 'assets/t3.jpg', caption: '③ 面向御堂筋右轉：到第一個紅綠燈，過斑馬線到飯店正門' },
+  { src: 'assets/t1.jpg', caption: 'PARCO 旁南改札出站：往左前方找 4-A 出口電梯' },
+  { src: 'assets/t2.jpg', caption: '看到 4-A 電梯：從 B1 搭到 1 樓地面' },
+  { src: 'assets/t3.jpg', caption: '面向御堂筋右轉：到第一個紅綠燈，過斑馬線到飯店正門' },
+];
+const IMG_KIX = [
+  { src: 'assets/kix1.jpg', caption: '① 入境後搭手扶梯上樓（往 2 樓）' },
+  { src: 'assets/kix2.jpg', caption: '② 過連接橋，前方是關西機場站' },
+  { src: 'assets/kix3.jpg', caption: '③ 進站大廳：右手邊是乘車處，左手邊「Ticket Office」是南海人工售票櫃台，買票往左' },
+  { src: 'assets/kix5.jpg', caption: '④ 月台看板：紅色「特急 ラピート」往 なんば（NK01）就是要搭的；橘色是空港急行' },
 ];
 const IMG_YODOYA = [
   { src: 'assets/t4.jpg', caption: '① 先出御堂筋線「北改札」，找「京阪本線（淀屋橋駅）」箭頭向右。不要跟下方「京阪中之島線」走' },
@@ -64,7 +70,12 @@ export const STOPS = [
         metro({ from: '難波 M20', to: '心齋橋 M19', direction: '梅田／新大阪／箕面萱野', stops: 1, minutes: 2, text: '另刷卡進地鐵。南海票不含這一段。', stationMap: L.yodoya.url }),
         walk(10, '南改札出站。沒有大件行李走 8 號出口連通道進飯店，上 2 樓；帶行李改走 4-A 電梯上地面，過御堂筋到正門'),
       ],
-      images: IMG_HOTEL,
+      images: [...IMG_KIX, ...IMG_HOTEL],
+    },
+    showCard: {
+      label: '給南海售票櫃台看（關西機場站）',
+      ja: ['関西空港 → 難波（なんば）', '大人 4名', '特急券＋乗車券', '一番早く乗れる特急（ラピート）をお願いします。'],
+      zh: '4 位大人，關西機場到難波，要買特急券＋乘車券，搭最快能搭到的那一班。',
     },
     links: [L.hno, L.namba3f, L.nankaiTT, L.kixTrain],
   },

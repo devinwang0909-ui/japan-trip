@@ -1,6 +1,6 @@
-const V = 'trip-v1';
+const V = 'trip-v2';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'data.js', 'trip.js', 'firebase-config.js', 'manifest.webmanifest',
-  'assets/t1.jpg', 'assets/t2.jpg', 'assets/t3.jpg', 'assets/t4.jpg', 'assets/t5.jpg', 'assets/t6.jpg', 'assets/icon-192.png'];
+  'assets/t1.jpg', 'assets/t2.jpg', 'assets/t3.jpg', 'assets/t4.jpg', 'assets/t5.jpg', 'assets/t6.jpg', 'assets/kix1.jpg', 'assets/kix2.jpg', 'assets/kix3.jpg', 'assets/kix5.jpg', 'assets/icon-192.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(V).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== V).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 const OK = ['www.gstatic.com', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];

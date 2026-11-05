@@ -327,6 +327,7 @@ function sheetStop(s){
       <a class="btn" href="${esc(uber(s))}" target="_blank" rel="noopener">${I.car}Uber 叫車</a>
       ${prev?`<a class="btn" href="${esc(gmaps(s,prev))}" target="_blank" rel="noopener">從上一站的路線</a><a class="btn" href="${esc(uber(s,prev))}" target="_blank" rel="noopener">Uber（上一站出發）</a>`:''}
     </div>
+    ${s.showCard?`<div class="taxi"><div class="label">${esc(s.showCard.label)}</div>${s.showCard.ja.map((x,i)=>`<div class="jp" style="${i===0?'':'font-size:20px'}">${esc(x)}</div>`).join('')}<div class="note" style="margin-top:6px">${esc(s.showCard.zh)}</div></div>`:''}
     ${s.approx?`<div class="note">定位點是約略位置。搭 Uber 或導航前，請在地圖上確認上車點和目的地。</div>`:''}
     ${route}
     ${imgBlock}
