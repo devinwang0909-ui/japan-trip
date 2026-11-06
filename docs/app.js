@@ -359,7 +359,7 @@ function sheetRoute(s){
   </div>`;
 }
 function sheetStop(s){
-  const now=jst(); const st=hoursState(s,now);
+  const prev=prevOf(s); const now=jst(); const st=hoursState(s,now);
   const h=s.hours||{};
   const key='s-'+s.id; const mine=myPhoto(key);
   const all=S.photos.filter(p=>p.key===key);
@@ -379,6 +379,7 @@ function sheetStop(s){
       ${!(h.open||h.close||s.price||s.address||s.addressJa)?'<div class="note">還沒填營業時間或門票。</div>':''}
       ${s.notes?`<p style="margin:10px 0 0;white-space:pre-wrap">${esc(s.notes)}</p>`:''}
     </div>
+    ${s.transit||s.showCard?routeBundle(s,prev):''}
     <div class="card"><div class="row" style="margin-bottom:8px"><div class="label grow">打卡照片・每人一張</div><span class="note">${all.length} 張</span></div>
       ${all.length?`<div class="pgrid" style="margin-bottom:10px">${all.map(thumb).join('')}</div>`:''}
       ${mine?`<div class="note">你已經在這裡拍過了。</div>`:`<button class="btn flash" style="width:100%" data-shoot="${esc(key)}">${I.cam}打卡拍照（只能拍一次）</button>`}
