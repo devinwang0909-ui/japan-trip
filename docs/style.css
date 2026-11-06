@@ -226,3 +226,5 @@ button.leg{background:none;border:0;padding:0;text-align:left;width:100%;color:i
 .hero .cov{border-radius:18px 18px 0 0;height:150px}
 .hero + .grab{top:0}
 .sheet .x{position:relative}
+
+.em{display:inline-block;margin-right:.35em;font-size:.95em}

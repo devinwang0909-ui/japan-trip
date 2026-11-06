@@ -1,6 +1,6 @@
 import { createData } from './data.js';
 import { DAY_CITY } from './trip.js';
-import { cover } from './art.js';
+import { emojiOf, photoBanner } from './art.js';
 const guessArt=s=>s.art||(/燒肉|烤肉/.test(s.name)?'grill':/鰻/.test(s.name)?'unagi':/神社|大社|稻荷/.test(s.name)?'shrine':/寺/.test(s.name)?'temple':/機場/.test(s.name)?'plane':/飯店|旅館|民宿/.test(s.name)?'hotel':/拉麵|餐|食|吃|壽司|咖啡|居酒屋/.test(s.name)?'pot':/高爾夫|golf/i.test(s.name)?'golf':/寶可夢/.test(s.name)?'poke':/市場|商店街/.test(s.name)?'market':'bags');
 (() => {
 const DAYS = ['2026-11-11','2026-11-12','2026-11-13','2026-11-14'];
@@ -149,8 +149,8 @@ function viewPlan(){
       tl.push(`<button class="stop${s.visited?' visited':''}${s.kind==='added'?' added':''}" data-open="${esc(s.id)}">
         <div class="time">${esc(s.time||'')}</div>
         <div class="body">
-          ${cover(guessArt(s),84)}
-          <h3>${esc(s.name)}</h3>
+          ${s.photo?photoBanner(s.photo,100):''}
+          <h3><span class="em" aria-hidden="true">${emojiOf(guessArt(s))}</span>${esc(s.name)}</h3>
           ${s.nameJa?`<div class="note">${esc(s.nameJa)}</div>`:''}
           <div class="meta">
             ${s.visited?`<span class="pill go">已抵達</span>`:''}
@@ -322,7 +322,7 @@ function sheetStop(s){
       ${imgs.length?`<div class="imgs">${imgs.map(im=>`<figure><a href="${esc(im.src)}" target="_blank" rel="noopener"><img src="${esc(im.src)}" alt="${esc(im.caption||'車站圖')}" loading="lazy"></a>${im.caption?`<figcaption>${esc(im.caption)}</figcaption>`:''}</figure>`).join('')}</div>`:''}
       <div class="row" style="margin-top:8px">${(s.links||[]).map(k=>`<a class="btn ghost" href="${esc(k.url)}" target="_blank" rel="noopener">${esc(k.label)}</a>`).join('')}</div>
     </div>` : '';
-  return `<div class="hero">${cover(guessArt(s),150)}</div><div class="grab"><div class="wrap"><div class="head"><div class="grow"><div class="label">${md(s.day)}${s.time?'・'+esc(s.time):''}</div><h2>${esc(s.name)}</h2>${s.nameJa?`<div class="note">${esc(s.nameJa)}</div>`:''}</div><button class="x" data-act="close" aria-label="關閉">${I.x}</button></div></div></div>
+  return `${s.photo?`<div class="hero">${photoBanner(s.photo,170)}</div>`:''}<div class="grab"><div class="wrap"><div class="head"><div class="grow"><div class="label">${md(s.day)}${s.time?'・'+esc(s.time):''}</div><h2><span class="em" aria-hidden="true">${emojiOf(guessArt(s))}</span>${esc(s.name)}</h2>${s.nameJa?`<div class="note">${esc(s.nameJa)}</div>`:''}</div><button class="x" data-act="close" aria-label="關閉">${I.x}</button></div></div></div>
   <div class="wrap">
     ${st&&st.kind!=='info'&&st.kind!=='open'?`<div class="banner ${st.kind==='soon'?'warn':'bad'}"><div><b>${esc(st.text)}</b></div></div>`:''}
     <div class="btns">
