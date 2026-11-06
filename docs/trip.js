@@ -1,6 +1,6 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 7;
+export const SEED_VERSION = 8;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#B3122D', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
@@ -10,6 +10,9 @@ const keihan = (o) => ({ type: 'rail', line: '京阪', code: 'KH', color: C.keih
 // 京阪特急（月台與車頭標示都是紅色）
 const keihanExp = (o) => ({ type: 'rail', line: '京阪特急', code: 'KH', color: C.nankai, ...o });
 const taxi = (minutes, text) => ({ type: 'taxi', minutes, text });
+
+// 從行程拿掉的景點 id：同步時會從資料庫一併刪除
+export const REMOVED_IDS = ['d1-midosuji'];
 
 export const INFO = {
   title: '大阪京都家族旅',
@@ -61,7 +64,7 @@ export const STOPS = [
   {
     id: 'd1-hotel', art: 'hotel', day: '2026-11-11', order: 20, time: '', name: '大阪日航飯店 入住／寄放行李', nameJa: 'ホテル日航大阪',
     addressJa: '大阪市中央区西心斎橋1-3-3', ...HOTEL, phone: '06-6244-1111',
-    notes: '15:00 起可入住，還不能進房先寄放行李，休息約 30 分鐘。櫃台在 2 樓。',
+    notes: '15:00 起可入住，還不能進房先寄放行李，休息約 30 分鐘。櫃台在 2 樓。\n之後在飯店門口的御堂筋散步拍照，約 15～20 分鐘，看到銀杏轉黃就多停一下，再回心齋橋站出發。',
     transit: {
       summary: '關西機場站 → 南海電鐵到難波 → 御堂筋線一站到心齋橋',
       enter: '南海 關西機場站', exit: '心齋橋 8 號出口（連通飯店）', minutes: 48, fare: '含 Rapi:t 特急券另計',
@@ -80,10 +83,6 @@ export const STOPS = [
       zh: '4 位大人，關西機場到難波，要買特急券＋乘車券，搭最快能搭到的那一班。',
     },
     links: [L.hno, L.namba3f, L.nankaiTT, L.kixTrain],
-  },
-  {
-    id: 'd1-midosuji', art: 'ginkgo', day: '2026-11-11', order: 30, time: '', name: '御堂筋 銀杏散步', nameJa: '御堂筋', ...HOTEL,
-    notes: '飯店正門就是御堂筋。拍照走走約 15～20 分鐘，看到銀杏轉黃就多停一下，再回心齋橋站。',
   },
   {
     id: 'd1-me', art: 'store', day: '2026-11-11', order: 40, time: '', name: '阪急梅田本店 7F me ISSEY MIYAKE', nameJa: '阪急うめだ本店 7F',

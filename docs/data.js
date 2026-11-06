@@ -1,5 +1,5 @@
 import { FIREBASE_CONFIG, TRIP_CODE } from './firebase-config.js';
-import { INFO, STOPS, SEED_VERSION } from './trip.js';
+import { INFO, STOPS, SEED_VERSION, REMOVED_IDS } from './trip.js';
 
 const SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
 const configured = FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('REPLACE');
@@ -65,6 +65,7 @@ async function firebaseData() {
         STOPS.slice(i, i + 400).forEach((s) => b.set(ref('stops', s.id), strip(s), { merge: true }));
         await b.commit();
       }
+      for (const id of REMOVED_IDS) await fs.deleteDoc(ref('stops', id)).catch(() => {});
       await fs.setDoc(ref('meta', 'info'), { ...strip(INFO), seedVersion: SEED_VERSION });
     } catch (e) { console.warn('seed skipped', e?.code || e); }
   }
