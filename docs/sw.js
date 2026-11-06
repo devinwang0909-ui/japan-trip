@@ -1,4 +1,4 @@
-const V = 'trip-v15';
+const V = 'trip-v16';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'data.js', 'art.js', 'trip.js', 'firebase-config.js', 'manifest.webmanifest',
   'assets/t1.jpg', 'assets/t2.jpg', 'assets/t3.jpg', 'assets/t4.jpg', 'assets/t5.jpg', 'assets/t6.jpg', 'assets/kix1.jpg', 'assets/kix2.jpg', 'assets/kix3.jpg', 'assets/kix5.jpg', 'assets/icon-192.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(V).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });

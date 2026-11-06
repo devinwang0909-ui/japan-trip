@@ -5,5 +5,5 @@ const EMOJI = {
 };
 export const emojiOf = (scene) => EMOJI[scene] || '📍';
 export function photoBanner(src, h = 110) {
-  return `<img class="cov" src="${src}" alt="" loading="lazy" style="height:${h}px;object-fit:cover">`;
+  return `<img class="cov" src="${src}" alt="" loading="lazy" style="height:${h}px;object-fit:cover;object-position:center 35%">`;
 }

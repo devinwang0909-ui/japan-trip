@@ -1,6 +1,6 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 8;
+export const SEED_VERSION = 9;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#B3122D', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
@@ -62,7 +62,7 @@ export const STOPS = [
     notes: '去程班號與抵達時間還沒確認，確認後再調整當天安排。出關後到飯店約 75～100 分鐘。',
   },
   {
-    id: 'd1-hotel', art: 'hotel', day: '2026-11-11', order: 20, time: '', name: '大阪日航飯店 入住／寄放行李', nameJa: 'ホテル日航大阪',
+    id: 'd1-hotel', photo: 'assets/p-d1-hotel.jpg', art: 'hotel', day: '2026-11-11', order: 20, time: '', name: '大阪日航飯店 入住／寄放行李', nameJa: 'ホテル日航大阪',
     addressJa: '大阪市中央区西心斎橋1-3-3', ...HOTEL, phone: '06-6244-1111',
     notes: '15:00 起可入住，還不能進房先寄放行李，休息約 30 分鐘。櫃台在 2 樓。\n之後在飯店門口的御堂筋散步拍照，約 15～20 分鐘，看到銀杏轉黃就多停一下，再回心齋橋站出發。',
     transit: {
@@ -85,7 +85,7 @@ export const STOPS = [
     links: [L.hno, L.namba3f, L.nankaiTT, L.kixTrain],
   },
   {
-    id: 'd1-me', art: 'store', day: '2026-11-11', order: 40, time: '', name: '阪急梅田本店 7F me ISSEY MIYAKE', nameJa: '阪急うめだ本店 7F',
+    id: 'd1-me', photo: 'assets/p-d1-me.jpg', art: 'store', day: '2026-11-11', order: 40, time: '', name: '阪急梅田本店 7F me ISSEY MIYAKE', nameJa: '阪急うめだ本店 7F',
     addressJa: '大阪市北区角田町8-7', lat: 34.7039, lng: 135.4985, approx: true,
     notes: '媽媽購物抓約 30 分鐘。要找 7 樓的 me ISSEY MIYAKE。',
     transit: {
@@ -98,19 +98,19 @@ export const STOPS = [
     links: [{ label: '阪急梅田本店 7F 樓層導覽', url: 'https://www.hankyu-dept.co.jp/honten/floor/floor7f.html' }, { label: '阪急梅田本店交通', url: 'https://www.hankyu-dept.co.jp/honten/map/index.html' }, { label: 'me ISSEY MIYAKE 門市查詢', url: 'https://www.isseymiyake.com/pages/stores?brand=6' }],
   },
   {
-    id: 'd1-alpen', art: 'golf', day: '2026-11-11', order: 50, time: '', name: 'Alpen OSAKA（Golf5）', nameJa: 'アルペン OSAKA ゴルフ5',
+    id: 'd1-alpen', photo: 'assets/p-d1-alpen.jpg', art: 'golf', day: '2026-11-11', order: 50, time: '', name: 'Alpen OSAKA（Golf5）', nameJa: 'アルペン OSAKA ゴルフ5',
     addressJa: '大阪市北区茶屋町1-32 YANMAR FLYING-Y BUILDING', lat: 34.7072, lng: 135.5012, approx: true,
     hours: { open: '10:00', close: '21:00' }, notes: 'Golf5 在 B1、B2。只逛這間，鶴屋已取消。',
     transit: { summary: '從阪急往茶屋町方向步行', minutes: 10, legs: [walk(8, '阪急大阪梅田站、茶屋町方向，步行約 5～10 分鐘')] },
   },
   {
-    id: 'd1-mizuno', art: 'shoe', day: '2026-11-11', order: 60, time: '', name: 'MIZUNO OSAKA CHAYAMACHI', nameJa: 'ミズノ 大阪茶屋町',
+    id: 'd1-mizuno', photo: 'assets/p-d1-mizuno.jpg', art: 'shoe', day: '2026-11-11', order: 60, time: '', name: 'MIZUNO OSAKA CHAYAMACHI', nameJa: 'ミズノ 大阪茶屋町',
     addressJa: '大阪市北区茶屋町13-5', lat: 34.7092, lng: 135.5024, approx: true,
     hours: { open: '11:00', close: '20:00' }, notes: 'Alpen 和美津濃兩間含中間步行，最多抓 1.5 小時。',
     transit: { summary: '往茶屋町北側步行', minutes: 10, legs: [walk(8, '從 Alpen 往茶屋町北側步行約 5～10 分鐘')] },
   },
   {
-    id: 'd1-dinner', art: 'grill', day: '2026-11-11', order: 70, time: '', name: '燒肉力丸 心齋橋店', nameJa: '焼肉力丸 心斎橋店',
+    id: 'd1-dinner', photo: 'assets/p-d1-dinner.jpg', art: 'grill', day: '2026-11-11', order: 70, time: '', name: '燒肉力丸 心齋橋店', nameJa: '焼肉力丸 心斎橋店',
     addressJa: '大阪市中央区心斎橋 ヨーロッパ通り 4F',
     notes: '訂位尚未確認成功。購物袋多可先回飯店。',
     transit: {
