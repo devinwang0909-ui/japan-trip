@@ -1,6 +1,6 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 13;
+export const SEED_VERSION = 14;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#B3122D', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
@@ -198,7 +198,7 @@ export const STOPS = [
 
   /* ---------- 11/13 ---------- */
   {
-    id: 'd3-otori', art: 'shrine', day: '2026-11-13', order: 10, time: '09:00', name: '大鳥大社', nameJa: '大鳥大社',
+    id: 'd3-otori', photo: 'assets/p-d3-otori.jpg', art: 'shrine', day: '2026-11-13', order: 10, time: '09:00', name: '大鳥大社', nameJa: '大鳥大社',
     addressJa: '堺市西区鳳北町1-1-2',
     hours: { open: '05:30', close: '18:00', note: '御守・御朱印授與所 09:00～16:30' },
     notes: '約 09:00～10:00 參拜。約 08:00 出門，整段留 60～75 分鐘。',
@@ -214,7 +214,7 @@ export const STOPS = [
     links: [{ label: '大鳥大社交通', url: 'https://www.ootoritaisha.jp/access/' }, L.metroMap],
   },
   {
-    id: 'd3-kadoma', art: 'bags', day: '2026-11-13', order: 20, time: '12:00', name: '三井 OUTLET PARK 大阪門真', nameJa: '三井アウトレットパーク 大阪門真',
+    id: 'd3-kadoma', photo: 'assets/p-d3-kadoma.jpg', art: 'bags', day: '2026-11-13', order: 20, time: '12:00', name: '三井 OUTLET PARK 大阪門真', nameJa: '三井アウトレットパーク 大阪門真',
     addressJa: '大阪府門真市松生町1-11',
     notes: '中午在商場吃飯，下午購物。約 16:45 離開商場。大鳥大社與門真分處南北兩端，這天交通緩衝要多留。',
     transit: {
@@ -230,7 +230,7 @@ export const STOPS = [
     links: [{ label: '門真 Outlet 交通', url: 'https://mitsui-shopping-park.com/mop/osakakadoma/access/' }, { label: '電車路線 PDF', url: 'https://mitsui-shopping-park.com/mop/osakakadoma/access/pdf/train.pdf' }],
   },
   {
-    id: 'd3-asatsu', art: 'steak', day: '2026-11-13', order: 30, time: '18:00', name: '肉のあさつ 梅田お初天神店（晚餐）', nameJa: '肉のあさつ 梅田お初天神店',
+    id: 'd3-asatsu', photo: 'assets/p-d3-asatsu.jpg', art: 'steak', day: '2026-11-13', order: 30, time: '18:00', name: '肉のあさつ 梅田お初天神店（晚餐）', nameJa: '肉のあさつ 梅田お初天神店',
     addressJa: '大阪市北区曽根崎2-5-20 お初天神ビル3F',
     notes: '晚餐暫抓 18:00，訂位尚未確認成功。',
     transit: {
