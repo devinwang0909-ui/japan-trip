@@ -169,12 +169,12 @@ function viewPlan(){
 function legRow(s,prev){
   const t=s.transit; const chips=[];
   (t.legs||[]).forEach(l=>{
-    if(l.type==='walk') chips.push(`<span class="chip plain">步行 ${l.minutes?l.minutes+' 分':''}</span>`);
+    if(l.type==='walk') chips.push(`<span class="chip plain">步行 ${l.minutes?l.minutes+' 分':''}${l.buf?`（預留 ${l.buf}）`:''}</span>`);
     else if(l.type==='taxi') chips.push(`<span class="chip plain">計程車 ${l.minutes?l.minutes+' 分':''}</span>`);
     else chips.push(`<span class="chip" style="--c:${esc(l.color||'#777')}"><i>${esc(l.code||'')}</i>${esc(l.line||'')}</span>`);
   });
   if(!chips.length&&t.summary) chips.push(`<span>${esc(t.summary)}</span>`);
-  return `<button class="leg" data-open="${esc((prev||s).id)}"${prev?'':' data-arr="1"'}><div class="rail"></div><div class="what">${chips.join('')}${t.minutes?`<span class="mono">約 ${t.minutes} 分</span>`:''}${t.fare?`<span class="mono">${esc(t.fare)}</span>`:''}${t.summary?`<div class="legsum">${esc(t.summary)}</div>`:''}<div class="legcta">看完整搭車步驟、出口與實拍照片 ›</div></div></button>`;
+  return `<button class="leg" data-open="${esc((prev||s).id)}"${prev?'':' data-arr="1"'}><div class="rail"></div><div class="what">${chips.join('')}${t.minutes?`<span class="mono">全程預留約 ${t.minutes} 分</span>`:''}${t.fare?`<span class="mono">${esc(t.fare)}</span>`:''}${t.summary?`<div class="legsum">${esc(t.summary)}</div>`:''}<div class="legcta">看完整搭車步驟、出口與實拍照片 ›</div></div></button>`;
 }
 function viewNext(s,now){
   const prev=prevOf(s); const st=hoursState(s,now);
@@ -311,7 +311,7 @@ function routeCard(t,fromName){
       ${(t.enter||t.exit)?`<div class="exitbox" style="margin-bottom:12px">${t.enter?`<div><span class="note">上車</span><b>${esc(t.enter)}</b></div>`:''}${t.exit?`<div><span class="note">下車走</span><b>${esc(t.exit)}</b></div>`:''}</div>`:''}
       ${(t.legs||[]).length?`<div class="route">${t.legs.map(legStep).join('')}</div>`:''}
       ${(t.steps||[]).length?`<ol style="margin:4px 0 0;padding-left:20px">${t.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:''}
-      ${(t.minutes||t.fare)?`<div class="row note" style="margin-top:8px">${t.minutes?`<span class="mono">約 ${t.minutes} 分鐘</span>`:''}${t.fare?`<span class="mono">車資 ${esc(t.fare)}</span>`:''}</div>`:''}
+      ${(t.minutes||t.fare)?`<div class="row note" style="margin-top:8px">${t.minutes?`<span class="mono">全程預留約 ${t.minutes} 分鐘（含候車、找路）</span>`:''}${t.fare?`<span class="mono">車資 ${esc(t.fare)}</span>`:''}</div>`:''}
     </div>`;
 }
 function showCardHtml(c){
@@ -380,7 +380,7 @@ function sheetStop(s){
 }
 function legStep(l){
   if(l.type==='taxi') return `<div class="rstep"><div class="dot walk"><span style="--c:var(--muted)"></span></div><div class="txt"><b>搭計程車${l.minutes?` 約 ${l.minutes} 分鐘`:''}</b>${l.text?`<div class="note">${esc(l.text)}</div>`:''}</div></div>`;
-  if(l.type==='walk') return `<div class="rstep"><div class="dot walk"><span style="--c:var(--muted)"></span></div><div class="txt"><b>步行${l.minutes?` ${l.minutes} 分鐘`:''}</b>${l.text?`<div class="note">${esc(l.text)}</div>`:''}</div></div>`;
+  if(l.type==='walk') return `<div class="rstep"><div class="dot walk"><span style="--c:var(--muted)"></span></div><div class="txt"><b>步行${l.minutes?` ${l.minutes} 分鐘`:''}${l.buf?`<span class="note" style="display:inline;font-weight:400">（Google 純走路時間；帶行李、找路預留 ${l.buf} 分）</span>`:''}</b>${l.text?`<div class="note">${esc(l.text)}</div>`:''}</div></div>`;
   return `<div class="rstep" style="--c:${esc(l.color||'#777')}"><div class="dot"><span></span></div><div class="txt">
     <b>${esc(l.from||'')} 上車</b>
     <span class="chip" style="--c:${esc(l.color||'#777')};margin:4px 0"><i>${esc(l.code||'')}</i>${esc(l.line||'')}</span>
