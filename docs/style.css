@@ -278,3 +278,7 @@ details.arr[open]>summary::after{content:"－"}
 @keyframes pfade{from{background:rgba(10,12,20,0)}to{background:rgba(10,12,20,.55)}}
 @keyframes pfadeout{from{background:rgba(10,12,20,.55)}to{background:rgba(10,12,20,0)}}
 @media (prefers-reduced-motion:reduce){.paperwrap,.pbg,.rod,.paperin{animation:none!important}}
+
+.jumpnext{width:100%;justify-content:space-between;background:var(--ai-soft);border-color:transparent;color:var(--ai);font-weight:700}
+.nextsec{display:flex;flex-direction:column;gap:12px;scroll-margin-top:60px}
+.nextbtns{position:sticky;bottom:0;background:var(--paper);padding:10px 0 4px}

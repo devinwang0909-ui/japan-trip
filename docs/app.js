@@ -352,15 +352,16 @@ function sheetStop(s){
   const key='s-'+s.id; const mine=myPhoto(key);
   const all=S.photos.filter(p=>p.key===key);
   const list=sorted(s.day); const idx=list.findIndex(x=>x.id===s.id); const next=list[idx+1]||null;
-  const nextBlock = next ? `
-    <div class="card next"><div class="label">下一站</div>
+  const nextBlock = next ? `<div id="nextAnchor" class="nextsec">
+    <div class="card next" style="padding-bottom:10px"><div class="label">下一站</div>
       <h2 style="font-size:20px;margin:4px 0 2px"><span class="em" aria-hidden="true">${emojiOf(guessArt(next))}</span>${esc(next.name)}</h2>
       ${next.nameJa?`<div class="note">${esc(next.nameJa)}</div>`:''}
-      <div class="btns" style="margin-top:10px">
-        <a class="btn primary" href="${esc(gmaps(next,s))}" target="_blank" rel="noopener">${I.map}從這裡導航過去</a>
-        <a class="btn" href="${esc(uber(next,s))}" target="_blank" rel="noopener">${I.car}Uber 從這裡出發</a>
-      </div></div>
-    ${routeBundle(next,s)}` : `<div class="note">這是${md(s.day)}最後一站。</div>`;
+    </div>
+    ${routeBundle(next,s)}
+    <div class="btns nextbtns">
+      <a class="btn primary" href="${esc(gmaps(next,s))}" target="_blank" rel="noopener">${I.map}從這裡導航過去</a>
+      <a class="btn" href="${esc(uber(next,s))}" target="_blank" rel="noopener">${I.car}Uber 從這裡出發</a>
+    </div></div>` : `<div class="note">這是${md(s.day)}最後一站。</div>`;
   const arrival = `<details class="arr"${S.sheet?.arr?' open':''}><summary>怎麼來到這一站${prev?`（從 ${esc(prev.name)}）`:''}</summary>
       <div class="arrbody">
         <div class="btns">
@@ -373,7 +374,7 @@ function sheetStop(s){
   return `${s.photo?`<div class="hero">${photoBanner(s.photo,170)}</div>`:''}<div class="grab"><div class="wrap"><div class="head"><div class="grow"><div class="label">${md(s.day)}${s.time?'・'+esc(s.time):''}</div><h2><span class="em" aria-hidden="true">${emojiOf(guessArt(s))}</span>${esc(s.name)}</h2>${s.nameJa?`<div class="note">${esc(s.nameJa)}</div>`:''}</div><button class="x" data-act="close" aria-label="關閉">${I.x}</button></div></div></div>
   <div class="wrap">
     ${st&&st.kind!=='info'&&st.kind!=='open'?`<div class="banner ${st.kind==='soon'?'warn':'bad'}"><div><b>${esc(st.text)}</b></div></div>`:''}
-    ${nextBlock}
+    ${next?`<button class="btn jumpnext" data-act="jump-next">下一站：${esc(next.name)} ↓</button>`:''}
     <div class="card"><div class="label" style="margin-bottom:8px">這站資訊</div>
       <dl class="kv">
         ${(h.open||h.close)?`<dt>營業</dt><dd class="mono">${esc(h.open||'')}–${esc(h.close||'')}</dd>`:''}
@@ -393,6 +394,7 @@ function sheetStop(s){
       ${mine?`<div class="note">你已經在這裡拍過了。</div>`:`<button class="btn flash" style="width:100%" data-shoot="${esc(key)}">${I.cam}打卡拍照（只能拍一次）</button>`}
     </div>
     ${S.canWrite?`<div class="btns"><button class="btn ${s.visited?'':'go'}" data-visit="${esc(s.id)}">${I.check}${s.visited?'改回未抵達':'標記已抵達'}</button><button class="btn" data-edit="${esc(s.id)}">編輯這站</button></div>`:''}
+    ${nextBlock}
   </div>`;
 }
 function legStep(l){
@@ -565,6 +567,7 @@ document.addEventListener('click',e=>{
   else if(d.copy){const v=d.copy;navigator.clipboard?.writeText(v).then(()=>toast('已複製 '+v),()=>toast(v))}
   else if(d.visit){const s=S.stops.find(x=>x.id===d.visit);if(s&&S.db)S.db.saveStop(s.id,{visited:!s.visited}).catch(()=>toast('儲存失敗'))}
   else if(d.del){S.db?.deleteStop(d.del).then(()=>{toast('已刪除');closeSheet()},()=>toast('刪除失敗'))}
+  else if(d.act==='jump-next'){document.getElementById('nextAnchor')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}
   else if(d.act==='paper-close'){closePaper()}
   else if(d.act==='close'){ if(S.sheet?.type==='photo'&&S.sheet.back){S.sheet=S.sheet.back;renderSheet()} else closeSheet() }
   else if(d.act==='add'){ openSheet({type:'form',day:S.day}) }
