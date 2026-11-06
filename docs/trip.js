@@ -1,6 +1,6 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 2;
+export const SEED_VERSION = 3;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#00753A', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
@@ -52,12 +52,12 @@ const L = {
 export const STOPS = [
   /* ---------- 11/11 ---------- */
   {
-    id: 'd1-airport', day: '2026-11-11', order: 10, time: '', noPrev: true,
+    id: 'd1-airport', art: 'plane', day: '2026-11-11', order: 10, time: '', noPrev: true,
     name: '關西機場 抵達', nameJa: '関西国際空港 第1ターミナル', address: '大阪府泉佐野市泉州空港北1',
     notes: '去程班號與抵達時間還沒確認，確認後再調整當天安排。出關後到飯店約 75～100 分鐘。',
   },
   {
-    id: 'd1-hotel', day: '2026-11-11', order: 20, time: '', name: '大阪日航飯店 入住／寄放行李', nameJa: 'ホテル日航大阪',
+    id: 'd1-hotel', art: 'hotel', day: '2026-11-11', order: 20, time: '', name: '大阪日航飯店 入住／寄放行李', nameJa: 'ホテル日航大阪',
     addressJa: '大阪市中央区西心斎橋1-3-3', ...HOTEL, phone: '06-6244-1111',
     notes: '15:00 起可入住，還不能進房先寄放行李，休息約 30 分鐘。櫃台在 2 樓。',
     transit: {
@@ -80,11 +80,11 @@ export const STOPS = [
     links: [L.hno, L.namba3f, L.nankaiTT, L.kixTrain],
   },
   {
-    id: 'd1-midosuji', day: '2026-11-11', order: 30, time: '', name: '御堂筋 銀杏散步', nameJa: '御堂筋', ...HOTEL,
+    id: 'd1-midosuji', art: 'ginkgo', day: '2026-11-11', order: 30, time: '', name: '御堂筋 銀杏散步', nameJa: '御堂筋', ...HOTEL,
     notes: '飯店正門就是御堂筋。拍照走走約 15～20 分鐘，看到銀杏轉黃就多停一下，再回心齋橋站。',
   },
   {
-    id: 'd1-me', day: '2026-11-11', order: 40, time: '', name: '阪急梅田本店 7F me ISSEY MIYAKE', nameJa: '阪急うめだ本店 7F',
+    id: 'd1-me', art: 'store', day: '2026-11-11', order: 40, time: '', name: '阪急梅田本店 7F me ISSEY MIYAKE', nameJa: '阪急うめだ本店 7F',
     addressJa: '大阪市北区角田町8-7', lat: 34.7039, lng: 135.4985, approx: true,
     notes: '媽媽購物抓約 30 分鐘。要找 7 樓的 me ISSEY MIYAKE。',
     transit: {
@@ -97,19 +97,19 @@ export const STOPS = [
     links: [{ label: '阪急梅田本店 7F 樓層導覽', url: 'https://www.hankyu-dept.co.jp/honten/floor/floor7f.html' }, { label: '阪急梅田本店交通', url: 'https://www.hankyu-dept.co.jp/honten/map/index.html' }, { label: 'me ISSEY MIYAKE 門市查詢', url: 'https://www.isseymiyake.com/pages/stores?brand=6' }],
   },
   {
-    id: 'd1-alpen', day: '2026-11-11', order: 50, time: '', name: 'Alpen OSAKA（Golf5）', nameJa: 'アルペン OSAKA ゴルフ5',
+    id: 'd1-alpen', art: 'golf', day: '2026-11-11', order: 50, time: '', name: 'Alpen OSAKA（Golf5）', nameJa: 'アルペン OSAKA ゴルフ5',
     addressJa: '大阪市北区茶屋町1-32 YANMAR FLYING-Y BUILDING', lat: 34.7072, lng: 135.5012, approx: true,
     hours: { open: '10:00', close: '21:00' }, notes: 'Golf5 在 B1、B2。只逛這間，鶴屋已取消。',
     transit: { summary: '從阪急往茶屋町方向步行', minutes: 10, legs: [walk(8, '阪急大阪梅田站、茶屋町方向，步行約 5～10 分鐘')] },
   },
   {
-    id: 'd1-mizuno', day: '2026-11-11', order: 60, time: '', name: 'MIZUNO OSAKA CHAYAMACHI', nameJa: 'ミズノ 大阪茶屋町',
+    id: 'd1-mizuno', art: 'shoe', day: '2026-11-11', order: 60, time: '', name: 'MIZUNO OSAKA CHAYAMACHI', nameJa: 'ミズノ 大阪茶屋町',
     addressJa: '大阪市北区茶屋町13-5', lat: 34.7092, lng: 135.5024, approx: true,
     hours: { open: '11:00', close: '20:00' }, notes: 'Alpen 和美津濃兩間含中間步行，最多抓 1.5 小時。',
     transit: { summary: '往茶屋町北側步行', minutes: 10, legs: [walk(8, '從 Alpen 往茶屋町北側步行約 5～10 分鐘')] },
   },
   {
-    id: 'd1-dinner', day: '2026-11-11', order: 70, time: '', name: '燒肉力丸 心齋橋店', nameJa: '焼肉力丸 心斎橋店',
+    id: 'd1-dinner', art: 'grill', day: '2026-11-11', order: 70, time: '', name: '燒肉力丸 心齋橋店', nameJa: '焼肉力丸 心斎橋店',
     addressJa: '大阪市中央区心斎橋 ヨーロッパ通り 4F',
     notes: '訂位尚未確認成功。購物袋多可先回飯店。',
     transit: {
@@ -122,14 +122,14 @@ export const STOPS = [
     },
   },
   {
-    id: 'd1-pokemon', day: '2026-11-11', order: 80, time: '', name: '寶可夢中心 OSAKA DX（彈性）', nameJa: 'ポケモンセンターオーサカDX',
+    id: 'd1-pokemon', art: 'poke', day: '2026-11-11', order: 80, time: '', name: '寶可夢中心 OSAKA DX（彈性）', nameJa: 'ポケモンセンターオーサカDX',
     hours: { close: '20:00', note: '營業至 20:00' },
     notes: '你與表弟單獨逛，先送爸媽回飯店。時段未固定，至少留 45～60 分鐘；接近 20:00 就改排別的時段。拉麵是彈性宵夜，不限店家。',
   },
 
   /* ---------- 11/12 ---------- */
   {
-    id: 'd2-inari', day: '2026-11-12', order: 10, time: '09:30', name: '伏見稻荷大社', nameJa: '伏見稲荷大社',
+    id: 'd2-inari', art: 'torii', day: '2026-11-12', order: 10, time: '09:30', name: '伏見稻荷大社', nameJa: '伏見稲荷大社',
     addressJa: '京都市伏見区深草藪之内町68', lat: 34.9671, lng: 135.7727, approx: true,
     notes: '建議 08:00 出門。參拜以山下本殿、千本鳥居前段為主，不排登頂。記得買狐狸煎餅。',
     transit: {
@@ -146,7 +146,7 @@ export const STOPS = [
     links: [{ label: '伏見稻荷大社交通', url: 'https://inari.jp/access/' }, L.yodoya, L.yodoyaPhoto, L.keihanTrains],
   },
   {
-    id: 'd2-okuniya', day: '2026-11-12', order: 20, time: '12:30', name: '大國屋鰻兵衞（午餐）', nameJa: '大国屋鰻兵衞 おおくにやまんべい',
+    id: 'd2-okuniya', art: 'unagi', day: '2026-11-12', order: 20, time: '12:30', name: '大國屋鰻兵衞（午餐）', nameJa: '大国屋鰻兵衞 おおくにやまんべい',
     addressJa: '京都市中京区菊屋町534', lat: 35.005, lng: 135.759, approx: true,
     notes: '申請 11/12 12:30、4 人，預約姓名 Tang／YiWei，尚待飯店回覆。現煮飯需等候，用餐留 1～1.5 小時。',
     transit: {
@@ -156,12 +156,12 @@ export const STOPS = [
     links: [{ label: '大國屋鰻兵衞官網', url: 'https://manbei.bubu-unagi.com/' }],
   },
   {
-    id: 'd2-nishiki', day: '2026-11-12', order: 30, time: '14:00', name: '錦市場・河原町', nameJa: '錦市場', lat: 35.005, lng: 135.765, approx: true,
+    id: 'd2-nishiki', art: 'market', day: '2026-11-12', order: 30, time: '14:00', name: '錦市場・河原町', nameJa: '錦市場', lat: 35.005, lng: 135.765, approx: true,
     notes: '以「錦市場」為導航，由西往東逛，接寺町、新京極，再到河原町購物或喝咖啡。想逛哪裡就逛哪裡，不必走完。前往高台寺前預留叫車時間。',
     transit: { summary: '餐廳在錦市場西側附近，步行即可', minutes: 5, legs: [walk(5, '沿市場由西往東')] },
   },
   {
-    id: 'd2-kodaiji', day: '2026-11-12', order: 40, time: '16:00', name: '高台寺（含夜間點燈）', nameJa: 'こうだいじ 高台寺',
+    id: 'd2-kodaiji', art: 'temple', day: '2026-11-12', order: 40, time: '16:00', name: '高台寺（含夜間點燈）', nameJa: 'こうだいじ 高台寺',
     lat: 35.0003, lng: 135.7807, approx: true,
     hours: { lastEntry: '21:30', close: '22:00', note: '夜間特別開放 10/23～12/13；17:00 點燈。日間時間以官網為準。' },
     notes: '暫排 16:00～17:30。11/12 有開放，成片紅葉依當時葉況。下車後跟「拝観入口」指標走，仍有步行與階梯。',
@@ -172,14 +172,14 @@ export const STOPS = [
     links: [{ label: '高台寺活動資訊', url: 'https://www.kodaiji.com/saiji' }],
   },
   {
-    id: 'd2-moritaya', day: '2026-11-12', order: 50, time: '18:00', name: 'モリタ屋 木屋町店（晚餐）', nameJa: 'モリタ屋 木屋町店',
+    id: 'd2-moritaya', art: 'pot', day: '2026-11-12', order: 50, time: '18:00', name: 'モリタ屋 木屋町店（晚餐）', nameJa: 'モリタ屋 木屋町店',
     addressJa: '京都市中京区上大阪町531', lat: 35.0072, lng: 135.7712, approx: true,
     notes: '晚餐暫估 18:00～18:30 開始，訂位尚未確認成功。',
     transit: { summary: '高台寺搭計程車', minutes: 25, legs: [taxi(25, '交通留 20～30 分鐘緩衝')] },
     links: [{ label: 'モリタ屋木屋町店', url: 'https://moritaya-kyoto.co.jp/restaurant/kiyamachi/' }],
   },
   {
-    id: 'd2-return', day: '2026-11-12', order: 60, time: '', name: '回大阪日航飯店', nameJa: 'ホテル日航大阪', addressJa: '大阪市中央区西心斎橋1-3-3', ...HOTEL,
+    id: 'd2-return', art: 'train', day: '2026-11-12', order: 60, time: '', name: '回大阪日航飯店', nameJa: 'ホテル日航大阪', addressJa: '大阪市中央区西心斎橋1-3-3', ...HOTEL,
     notes: '餐廳到飯店預留約 80～100 分鐘。特急一般車廂用普通車資即可；Premium Car 指定席須另買券。',
     transit: {
       summary: '京阪三條 → 特急到淀屋橋 → 御堂筋線回心齋橋', enter: '京阪三條站 7 號出口', exit: '心齋橋 8 號出口', minutes: 90,
@@ -197,7 +197,7 @@ export const STOPS = [
 
   /* ---------- 11/13 ---------- */
   {
-    id: 'd3-otori', day: '2026-11-13', order: 10, time: '09:00', name: '大鳥大社', nameJa: '大鳥大社',
+    id: 'd3-otori', art: 'shrine', day: '2026-11-13', order: 10, time: '09:00', name: '大鳥大社', nameJa: '大鳥大社',
     addressJa: '堺市西区鳳北町1-1-2',
     hours: { open: '05:30', close: '18:00', note: '御守・御朱印授與所 09:00～16:30' },
     notes: '約 09:00～10:00 參拜。約 08:00 出門，整段留 60～75 分鐘。',
@@ -213,7 +213,7 @@ export const STOPS = [
     links: [{ label: '大鳥大社交通', url: 'https://www.ootoritaisha.jp/access/' }, L.metroMap],
   },
   {
-    id: 'd3-kadoma', day: '2026-11-13', order: 20, time: '12:00', name: '三井 OUTLET PARK 大阪門真', nameJa: '三井アウトレットパーク 大阪門真',
+    id: 'd3-kadoma', art: 'bags', day: '2026-11-13', order: 20, time: '12:00', name: '三井 OUTLET PARK 大阪門真', nameJa: '三井アウトレットパーク 大阪門真',
     addressJa: '大阪府門真市松生町1-11',
     notes: '中午在商場吃飯，下午購物。約 16:45 離開商場。大鳥大社與門真分處南北兩端，這天交通緩衝要多留。',
     transit: {
@@ -229,7 +229,7 @@ export const STOPS = [
     links: [{ label: '門真 Outlet 交通', url: 'https://mitsui-shopping-park.com/mop/osakakadoma/access/' }, { label: '電車路線 PDF', url: 'https://mitsui-shopping-park.com/mop/osakakadoma/access/pdf/train.pdf' }],
   },
   {
-    id: 'd3-asatsu', day: '2026-11-13', order: 30, time: '18:00', name: '肉のあさつ 梅田お初天神店（晚餐）', nameJa: '肉のあさつ 梅田お初天神店',
+    id: 'd3-asatsu', art: 'steak', day: '2026-11-13', order: 30, time: '18:00', name: '肉のあさつ 梅田お初天神店（晚餐）', nameJa: '肉のあさつ 梅田お初天神店',
     addressJa: '大阪市北区曽根崎2-5-20 お初天神ビル3F',
     notes: '晚餐暫抓 18:00，訂位尚未確認成功。',
     transit: {
@@ -246,7 +246,7 @@ export const STOPS = [
     links: [{ label: '肉のあさつ', url: 'https://nikunoasatsu.owst.jp/map' }, L.yodoyaPhoto2],
   },
   {
-    id: 'd3-return', day: '2026-11-13', order: 40, time: '', name: '回大阪日航飯店', nameJa: 'ホテル日航大阪', addressJa: '大阪市中央区西心斎橋1-3-3', ...HOTEL,
+    id: 'd3-return', art: 'train', day: '2026-11-13', order: 40, time: '', name: '回大阪日航飯店', nameJa: 'ホテル日航大阪', addressJa: '大阪市中央区西心斎橋1-3-3', ...HOTEL,
     transit: {
       summary: '梅田 13 號出口 → 御堂筋線往難波方向到心齋橋', minutes: 35, enter: '梅田 13 號出口', exit: '心齋橋 8 號出口',
       legs: [
@@ -260,11 +260,11 @@ export const STOPS = [
 
   /* ---------- 11/14 ---------- */
   {
-    id: 'd4-checkout', day: '2026-11-14', order: 10, time: '', name: '飯店早餐・退房', nameJa: 'ホテル日航大阪', addressJa: '大阪市中央区西心斎橋1-3-3', ...HOTEL,
+    id: 'd4-checkout', art: 'suitcase', day: '2026-11-14', order: 10, time: '', name: '飯店早餐・退房', nameJa: 'ホテル日航大阪', addressJa: '大阪市中央区西心斎橋1-3-3', ...HOTEL,
     notes: '回程班號與起飛時間還沒確認，要依班機倒推出門時間。飯店到航廈先抓約 90 分鐘，另外保留國際線報到時間。',
   },
   {
-    id: 'd4-airport', day: '2026-11-14', order: 20, time: '', name: '關西機場 出發', nameJa: '関西国際空港 第1ターミナル 4F 国際線出発', address: '大阪府泉佐野市泉州空港北1',
+    id: 'd4-airport', art: 'plane', day: '2026-11-14', order: 20, time: '', name: '關西機場 出發', nameJa: '関西国際空港 第1ターミナル 4F 国際線出発', address: '大阪府泉佐野市泉州空港北1',
     notes: '利木津巴士是備選，班次要配合實際航班確認。長榮報到櫃台在 4 樓國際線出發大廳。',
     transit: {
       summary: '心齋橋 → 御堂筋線一站到難波 → 南海到關西機場', minutes: 90, enter: '心齋橋 M19', exit: '關西機場站，連接通道到第一航廈',

@@ -219,3 +219,10 @@ button.leg{background:none;border:0;padding:0;text-align:left;width:100%;color:i
 .leg .what{flex-direction:row}
 .legsum{flex-basis:100%;font-size:13px;color:var(--ink);line-height:1.45}
 .legcta{flex-basis:100%;font-size:12px;font-weight:700;color:var(--ai)}
+
+.cov{display:block;width:100%;border-radius:10px;background:var(--line)}
+.stop .body .cov{margin-bottom:2px}
+.hero{position:relative}
+.hero .cov{border-radius:18px 18px 0 0;height:150px}
+.hero + .grab{top:0}
+.sheet .x{position:relative}
