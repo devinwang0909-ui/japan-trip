@@ -159,7 +159,7 @@ function viewPlan(){
         </div></button>`);
     });
     if(hotel) tl.push(`<div class="leg"><div class="rail"></div><div class="what">回到住宿：${esc(hotel.name)}</div></div>`);
-    out.push(`<div><div class="label" style="margin-bottom:8px">${md(day)}（${DOW[dowOf(day)]}）行程</div><div class="tl">${tl.join('')}</div></div>`);
+    out.push(`<div><div class="label" style="margin-bottom:2px">${md(day)}（${DOW[dowOf(day)]}）行程</div><div class="note" style="margin-bottom:8px">點景點看營業資訊，點兩站之間的路線看怎麼搭。</div><div class="tl">${tl.join('')}</div></div>`);
   }
   return out.join('');
 }
@@ -171,7 +171,7 @@ function legRow(s){
     else chips.push(`<span class="chip" style="--c:${esc(l.color||'#777')}"><i>${esc(l.code||'')}</i>${esc(l.line||'')}</span>`);
   });
   if(!chips.length&&t.summary) chips.push(`<span>${esc(t.summary)}</span>`);
-  return `<div class="leg"><div class="rail"></div><div class="what">${chips.join('')}${t.minutes?`<span class="mono">約 ${t.minutes} 分</span>`:''}${t.fare?`<span class="mono">${esc(t.fare)}</span>`:''}</div></div>`;
+  return `<button class="leg" data-open="${esc(s.id)}"><div class="rail"></div><div class="what">${chips.join('')}${t.minutes?`<span class="mono">約 ${t.minutes} 分</span>`:''}${t.fare?`<span class="mono">${esc(t.fare)}</span>`:''}${t.summary?`<div class="legsum">${esc(t.summary)}</div>`:''}<div class="legcta">看完整搭車步驟、出口與實拍照片 ›</div></div></button>`;
 }
 function viewNext(s,now){
   const prev=prevOf(s); const st=hoursState(s,now);

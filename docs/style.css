@@ -214,3 +214,8 @@ form{display:flex;flex-direction:column;gap:12px}
 .flashmodal .mono{font-size:44px;font-weight:600}
 .status{font-size:12px;color:var(--muted);text-align:center}
 @media (max-width:360px){.btns.three{grid-template-columns:1fr 1fr}}
+
+button.leg{background:none;border:0;padding:0;text-align:left;width:100%;color:inherit}
+.leg .what{flex-direction:row}
+.legsum{flex-basis:100%;font-size:13px;color:var(--ink);line-height:1.45}
+.legcta{flex-basis:100%;font-size:12px;font-weight:700;color:var(--ai)}
