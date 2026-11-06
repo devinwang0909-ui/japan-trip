@@ -1,12 +1,14 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 6;
+export const SEED_VERSION = 7;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#B3122D', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
 const walk = (minutes, text) => ({ type: 'walk', minutes, text });
 const metro = (o) => ({ type: 'rail', line: '御堂筋線', code: 'M', color: C.metro, ...o });
 const keihan = (o) => ({ type: 'rail', line: '京阪', code: 'KH', color: C.keihan, ...o });
+// 京阪特急（月台與車頭標示都是紅色）
+const keihanExp = (o) => ({ type: 'rail', line: '京阪特急', code: 'KH', color: C.nankai, ...o });
 const taxi = (minutes, text) => ({ type: 'taxi', minutes, text });
 
 export const INFO = {
@@ -137,7 +139,7 @@ export const STOPS = [
       legs: [
         metro({ from: '心齋橋 M19', to: '淀屋橋 M17', direction: '梅田／新大阪／箕面萱野', stops: 2, minutes: 5, text: '經本町 M18', stationMap: L.yodoya.url }),
         walk(10, '出地鐵閘門，跟「京阪電車／KEIHAN」走，另刷卡進京阪（實拍圖在下方）'),
-        keihan({ from: '淀屋橋', to: '丹波橋', direction: '出町柳', minutes: 40, text: '搭特急' }),
+        keihanExp({ from: '淀屋橋', to: '丹波橋', direction: '出町柳', minutes: 40, text: '搭特急' }),
         keihan({ from: '丹波橋', to: '伏見稻荷', direction: '京都市區方向（同方向）', minutes: 8, text: '轉普通或準急，確認停靠「伏見稻荷」。特急不停！' }),
         walk(5, '往東沿參道到大社'),
       ],
@@ -185,7 +187,7 @@ export const STOPS = [
       summary: '京阪三條 → 特急到淀屋橋 → 御堂筋線回心齋橋', enter: '京阪三條站 7 號出口', exit: '心齋橋 8 號出口', minutes: 90,
       legs: [
         walk(5, '餐廳步行到京阪三條站，走 7 號出口下樓進站'),
-        keihan({ from: '三條', to: '淀屋橋', direction: '淀屋橋（上車前確認終點）', minutes: 50, text: '搭特急' }),
+        keihanExp({ from: '三條', to: '淀屋橋', direction: '淀屋橋（上車前確認終點）', minutes: 50, text: '搭特急' }),
         walk(10, '淀屋橋出京阪閘門，跟紅色 M「御堂筋線」轉地鐵，另刷卡'),
         metro({ from: '淀屋橋 M17', to: '心齋橋 M19', direction: '難波／天王寺／中百舌鳥', stops: 2, minutes: 5, text: '經本町' }),
         walk(8, '南改札出站，8 號出口連通道回日航'),
