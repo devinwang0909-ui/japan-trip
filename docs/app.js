@@ -335,6 +335,10 @@ function closePaper(){
   w.querySelector('.pbg').addEventListener('animationend',done,{once:true});
   setTimeout(done,1000);
 }
+function floorMapHtml(x){
+  const m=x.floorMap; if(!m) return '';
+  return `<div class="card"><div class="label" style="margin-bottom:8px">店內位置</div><a href="${esc(m.src)}" target="_blank" rel="noopener"><img src="${esc(m.src)}" alt="${esc(m.caption)}" loading="lazy" style="width:100%;height:auto;border-radius:10px;display:block"></a><div class="note" style="margin-top:8px">${esc(m.caption)}<br>點圖可放大。</div></div>`;
+}
 function imgsHtml(x){
   const imgs=(x.transit?.images||[]);
   if(!(imgs.length||(x.links||[]).length)) return '';
@@ -345,7 +349,7 @@ function imgsHtml(x){
 }
 // 去 dest 要看的全部內容：給櫃台的卡片、路線、實拍圖
 function routeBundle(dest,from){
-  return `${showCardHtml(dest.showCard,dest.id)}${dest.approx?`<div class="note">定位點是約略位置。搭 Uber 或導航前，請在地圖上確認上車點和目的地。</div>`:''}${routeCard(dest.transit,from?.name)}${imgsHtml(dest)}`;
+  return `${showCardHtml(dest.showCard,dest.id)}${dest.approx?`<div class="note">定位點是約略位置。搭 Uber 或導航前，請在地圖上確認上車點和目的地。</div>`:''}${routeCard(dest.transit,from?.name)}${floorMapHtml(dest)}${imgsHtml(dest)}`;
 }
 function sheetRoute(s){
   const prev=prevOf(s);

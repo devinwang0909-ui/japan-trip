@@ -1,6 +1,6 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 14;
+export const SEED_VERSION = 15;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#B3122D', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
@@ -85,7 +85,7 @@ export const STOPS = [
     links: [L.hno, L.namba3f, L.nankaiTT, L.kixTrain],
   },
   {
-    id: 'd1-me', photo: 'assets/p-d1-me.jpg', art: 'store', day: '2026-11-11', order: 40, time: '', name: '阪急梅田本店 7F me ISSEY MIYAKE', nameJa: '阪急うめだ本店 7F',
+    id: 'd1-me', photo: 'assets/p-d1-me.jpg', floorMap: { src: 'assets/hankyu-7f.jpg', caption: '阪急梅田本店 7F 樓層圖。黃框紅線標示的就是 me ISSEY MIYAKE，在 JR Side 這一側，上面一格是 PLEATS PLEASE ISSEY MIYAKE，不要認錯。' }, art: 'store', day: '2026-11-11', order: 40, time: '', name: '阪急梅田本店 7F me ISSEY MIYAKE', nameJa: '阪急うめだ本店 7F',
     addressJa: '大阪市北区角田町8-7', lat: 34.7039, lng: 135.4985, approx: true,
     notes: '媽媽購物抓約 30 分鐘。要找 7 樓的 me ISSEY MIYAKE。',
     transit: {
