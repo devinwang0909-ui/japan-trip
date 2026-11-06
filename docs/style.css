@@ -228,3 +228,10 @@ button.leg{background:none;border:0;padding:0;text-align:left;width:100%;color:i
 .sheet .x{position:relative}
 
 .em{display:inline-block;margin-right:.35em;font-size:.95em}
+
+details.arr{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0}
+details.arr>summary{cursor:pointer;padding:14px;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:8px}
+details.arr>summary::-webkit-details-marker{display:none}
+details.arr>summary::after{content:"＋";color:var(--ai)}
+details.arr[open]>summary::after{content:"－"}
+.arrbody{padding:0 14px 14px;display:flex;flex-direction:column;gap:12px}

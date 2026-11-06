@@ -1,9 +1,9 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 3;
+export const SEED_VERSION = 4;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
-const C = { metro: '#E5171F', nankai: '#00753A', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
+const C = { metro: '#E5171F', nankai: '#B3122D', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
 const walk = (minutes, text) => ({ type: 'walk', minutes, text });
 const metro = (o) => ({ type: 'rail', line: '御堂筋線', code: 'M', color: C.metro, ...o });
 const keihan = (o) => ({ type: 'rail', line: '京阪', code: 'KH', color: C.keihan, ...o });

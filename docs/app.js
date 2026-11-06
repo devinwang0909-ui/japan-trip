@@ -143,7 +143,7 @@ function viewPlan(){
     const tl=[];
     const hotel=hotelFor(day);
     list.forEach((s,i)=>{
-      if(s.transit) tl.push(legRow(s));
+      if(s.transit) tl.push(legRow(s,list[i-1]));
       const st=hoursState(s,isToday?now:null);
       const ph=S.photos.filter(p=>p.key==='s-'+s.id).length;
       tl.push(`<button class="stop${s.visited?' visited':''}${s.kind==='added'?' added':''}" data-open="${esc(s.id)}">
@@ -166,7 +166,7 @@ function viewPlan(){
   }
   return out.join('');
 }
-function legRow(s){
+function legRow(s,prev){
   const t=s.transit; const chips=[];
   (t.legs||[]).forEach(l=>{
     if(l.type==='walk') chips.push(`<span class="chip plain">步行 ${l.minutes?l.minutes+' 分':''}</span>`);
@@ -174,7 +174,7 @@ function legRow(s){
     else chips.push(`<span class="chip" style="--c:${esc(l.color||'#777')}"><i>${esc(l.code||'')}</i>${esc(l.line||'')}</span>`);
   });
   if(!chips.length&&t.summary) chips.push(`<span>${esc(t.summary)}</span>`);
-  return `<button class="leg" data-open="${esc(s.id)}"><div class="rail"></div><div class="what">${chips.join('')}${t.minutes?`<span class="mono">約 ${t.minutes} 分</span>`:''}${t.fare?`<span class="mono">${esc(t.fare)}</span>`:''}${t.summary?`<div class="legsum">${esc(t.summary)}</div>`:''}<div class="legcta">看完整搭車步驟、出口與實拍照片 ›</div></div></button>`;
+  return `<button class="leg" data-open="${esc((prev||s).id)}"${prev?'':' data-arr="1"'}><div class="rail"></div><div class="what">${chips.join('')}${t.minutes?`<span class="mono">約 ${t.minutes} 分</span>`:''}${t.fare?`<span class="mono">${esc(t.fare)}</span>`:''}${t.summary?`<div class="legsum">${esc(t.summary)}</div>`:''}<div class="legcta">看完整搭車步驟、出口與實拍照片 ›</div></div></button>`;
 }
 function viewNext(s,now){
   const prev=prevOf(s); const st=hoursState(s,now);
@@ -190,7 +190,7 @@ function viewNext(s,now){
     <div class="btns three">
       <a class="btn primary" href="${esc(gmaps(s))}" target="_blank" rel="noopener">${I.map}導航</a>
       <a class="btn" href="${esc(uber(s))}" target="_blank" rel="noopener">${I.car}Uber</a>
-      <button class="btn" data-open="${esc(s.id)}">怎麼去</button>
+      <button class="btn" data-open="${esc(s.id)}" data-arr="1">怎麼去</button>
     </div></div>`;
 }
 function viewWeather(day){
@@ -304,37 +304,60 @@ function renderSheet(){
   if(keepScroll) $('#layer .sheet').scrollTop=keepScroll;
   document.body.style.overflow='hidden';
 }
-function sheetStop(s){
-  const prev=prevOf(s); const now=jst(); const st=hoursState(s,now);
-  const t=s.transit||null; const h=s.hours||{};
-  const key='s-'+s.id; const mine=myPhoto(key);
-  const all=S.photos.filter(p=>p.key===key);
-  const route = t ? `
-    <div class="card"><div class="label" style="margin-bottom:8px">怎麼去${prev?`（從 ${esc(prev.name)}）`:''}</div>
+function routeCard(t,fromName){
+  if(!t) return '';
+  return `<div class="card"><div class="label" style="margin-bottom:8px">怎麼搭${fromName?`（從 ${esc(fromName)}）`:''}</div>
       ${t.summary?`<p style="margin:0 0 10px">${esc(t.summary)}</p>`:''}
       ${(t.enter||t.exit)?`<div class="exitbox" style="margin-bottom:12px">${t.enter?`<div><span class="note">上車</span><b>${esc(t.enter)}</b></div>`:''}${t.exit?`<div><span class="note">下車走</span><b>${esc(t.exit)}</b></div>`:''}</div>`:''}
       ${(t.legs||[]).length?`<div class="route">${t.legs.map(legStep).join('')}</div>`:''}
       ${(t.steps||[]).length?`<ol style="margin:4px 0 0;padding-left:20px">${t.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:''}
       ${(t.minutes||t.fare)?`<div class="row note" style="margin-top:8px">${t.minutes?`<span class="mono">約 ${t.minutes} 分鐘</span>`:''}${t.fare?`<span class="mono">車資 ${esc(t.fare)}</span>`:''}</div>`:''}
-    </div>` : '';
-  const imgs=(t?.images||[]);
-  const imgBlock = (imgs.length||(s.links||[]).length) ? `<div class="card"><div class="label" style="margin-bottom:8px">車站實拍與官方連結</div>
+    </div>`;
+}
+function showCardHtml(c){
+  return c?`<div class="taxi"><div class="label">${esc(c.label)}</div>${c.ja.map((x,i)=>`<div class="jp" style="${i===0?'':'font-size:20px'}">${esc(x)}</div>`).join('')}<div class="note" style="margin-top:6px">${esc(c.zh)}</div></div>`:'';
+}
+function imgsHtml(x){
+  const imgs=(x.transit?.images||[]);
+  if(!(imgs.length||(x.links||[]).length)) return '';
+  return `<div class="card"><div class="label" style="margin-bottom:8px">車站實拍與官方連結</div>
       ${imgs.length?`<div class="imgs">${imgs.map(im=>`<figure><a href="${esc(im.src)}" target="_blank" rel="noopener"><img src="${esc(im.src)}" alt="${esc(im.caption||'車站圖')}" loading="lazy"></a>${im.caption?`<figcaption>${esc(im.caption)}</figcaption>`:''}</figure>`).join('')}</div>`:''}
-      <div class="row" style="margin-top:8px">${(s.links||[]).map(k=>`<a class="btn ghost" href="${esc(k.url)}" target="_blank" rel="noopener">${esc(k.label)}</a>`).join('')}</div>
-    </div>` : '';
+      <div class="row" style="margin-top:8px">${(x.links||[]).map(k=>`<a class="btn ghost" href="${esc(k.url)}" target="_blank" rel="noopener">${esc(k.label)}</a>`).join('')}</div>
+    </div>`;
+}
+// 去 dest 要看的全部內容：給櫃台的卡片、路線、實拍圖
+function routeBundle(dest,from){
+  return `${showCardHtml(dest.showCard)}${dest.approx?`<div class="note">定位點是約略位置。搭 Uber 或導航前，請在地圖上確認上車點和目的地。</div>`:''}${routeCard(dest.transit,from?.name)}${imgsHtml(dest)}`;
+}
+function sheetStop(s){
+  const prev=prevOf(s); const now=jst(); const st=hoursState(s,now);
+  const h=s.hours||{};
+  const key='s-'+s.id; const mine=myPhoto(key);
+  const all=S.photos.filter(p=>p.key===key);
+  const list=sorted(s.day); const idx=list.findIndex(x=>x.id===s.id); const next=list[idx+1]||null;
+  const nextBlock = next ? `
+    <div class="card next"><div class="label">下一站</div>
+      <h2 style="font-size:20px;margin:4px 0 2px"><span class="em" aria-hidden="true">${emojiOf(guessArt(next))}</span>${esc(next.name)}</h2>
+      ${next.nameJa?`<div class="note">${esc(next.nameJa)}</div>`:''}
+      <div class="btns" style="margin-top:10px">
+        <a class="btn primary" href="${esc(gmaps(next,s))}" target="_blank" rel="noopener">${I.map}從這裡導航過去</a>
+        <a class="btn" href="${esc(uber(next,s))}" target="_blank" rel="noopener">${I.car}Uber 從這裡出發</a>
+      </div></div>
+    ${routeBundle(next,s)}` : `<div class="note">這是${md(s.day)}最後一站。</div>`;
+  const arrival = `<details class="arr"${S.sheet?.arr?' open':''}><summary>怎麼來到這一站${prev?`（從 ${esc(prev.name)}）`:''}</summary>
+      <div class="arrbody">
+        <div class="btns">
+          <a class="btn primary" href="${esc(gmaps(s))}" target="_blank" rel="noopener">${I.map}從我這裡導航到這站</a>
+          <a class="btn" href="${esc(uber(s))}" target="_blank" rel="noopener">${I.car}Uber 到這站</a>
+          ${prev?`<a class="btn" href="${esc(gmaps(s,prev))}" target="_blank" rel="noopener">從上一站的路線</a><a class="btn" href="${esc(uber(s,prev))}" target="_blank" rel="noopener">Uber（上一站出發）</a>`:''}
+        </div>
+        ${routeBundle(s,prev)}
+      </div></details>`;
   return `${s.photo?`<div class="hero">${photoBanner(s.photo,170)}</div>`:''}<div class="grab"><div class="wrap"><div class="head"><div class="grow"><div class="label">${md(s.day)}${s.time?'・'+esc(s.time):''}</div><h2><span class="em" aria-hidden="true">${emojiOf(guessArt(s))}</span>${esc(s.name)}</h2>${s.nameJa?`<div class="note">${esc(s.nameJa)}</div>`:''}</div><button class="x" data-act="close" aria-label="關閉">${I.x}</button></div></div></div>
   <div class="wrap">
     ${st&&st.kind!=='info'&&st.kind!=='open'?`<div class="banner ${st.kind==='soon'?'warn':'bad'}"><div><b>${esc(st.text)}</b></div></div>`:''}
-    <div class="btns">
-      <a class="btn primary" href="${esc(gmaps(s))}" target="_blank" rel="noopener">${I.map}從我這裡導航</a>
-      <a class="btn" href="${esc(uber(s))}" target="_blank" rel="noopener">${I.car}Uber 叫車</a>
-      ${prev?`<a class="btn" href="${esc(gmaps(s,prev))}" target="_blank" rel="noopener">從上一站的路線</a><a class="btn" href="${esc(uber(s,prev))}" target="_blank" rel="noopener">Uber（上一站出發）</a>`:''}
-    </div>
-    ${s.showCard?`<div class="taxi"><div class="label">${esc(s.showCard.label)}</div>${s.showCard.ja.map((x,i)=>`<div class="jp" style="${i===0?'':'font-size:20px'}">${esc(x)}</div>`).join('')}<div class="note" style="margin-top:6px">${esc(s.showCard.zh)}</div></div>`:''}
-    ${s.approx?`<div class="note">定位點是約略位置。搭 Uber 或導航前，請在地圖上確認上車點和目的地。</div>`:''}
-    ${route}
-    ${imgBlock}
-    <div class="card"><div class="label" style="margin-bottom:8px">營業資訊</div>
+    ${nextBlock}
+    <div class="card"><div class="label" style="margin-bottom:8px">這站資訊</div>
       <dl class="kv">
         ${(h.open||h.close)?`<dt>營業</dt><dd class="mono">${esc(h.open||'')}–${esc(h.close||'')}</dd>`:''}
         ${h.lastEntry?`<dt>最後入場</dt><dd class="mono">${esc(h.lastEntry)}</dd>`:''}
@@ -347,6 +370,7 @@ function sheetStop(s){
       ${!(h.open||h.close||s.price||s.address||s.addressJa)?'<div class="note">還沒填營業時間或門票。</div>':''}
       ${s.notes?`<p style="margin:10px 0 0;white-space:pre-wrap">${esc(s.notes)}</p>`:''}
     </div>
+    ${arrival}
     <div class="card"><div class="row" style="margin-bottom:8px"><div class="label grow">打卡照片・每人一張</div><span class="note">${all.length} 張</span></div>
       ${all.length?`<div class="pgrid" style="margin-bottom:10px">${all.map(thumb).join('')}</div>`:''}
       ${mine?`<div class="note">你已經在這裡拍過了。</div>`:`<button class="btn flash" style="width:100%" data-shoot="${esc(key)}">${I.cam}打卡拍照（只能拍一次）</button>`}
@@ -515,7 +539,7 @@ document.addEventListener('click',e=>{
   const d=t.dataset;
   if(d.day){S.day=d.day;ls.set('day',{d:d.day,at:jst().date});render();window.scrollTo({top:0})}
   else if(d.tab){S.tab=d.tab;render();window.scrollTo({top:0})}
-  else if(d.open){e.preventDefault();openSheet({type:'stop',id:d.open})}
+  else if(d.open){e.preventDefault();openSheet({type:'stop',id:d.open,arr:!!d.arr})}
   else if(d.shoot) startShoot(d.shoot);
   else if(d.view) openSheet({type:'photo',id:d.view,back:S.sheet});
   else if(d.edit) openSheet({type:'form',id:d.edit});
