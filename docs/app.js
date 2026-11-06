@@ -314,8 +314,25 @@ function routeCard(t,fromName){
       ${(t.minutes||t.fare)?`<div class="row note" style="margin-top:8px">${t.minutes?`<span class="mono">約 ${t.minutes} 分鐘</span>`:''}${t.fare?`<span class="mono">車資 ${esc(t.fare)}</span>`:''}</div>`:''}
     </div>`;
 }
-function showCardHtml(c){
-  return c?`<div class="taxi"><div class="label">${esc(c.label)}</div>${c.ja.map((x,i)=>`<div class="jp" style="${i===0?'':'font-size:20px'}">${esc(x)}</div>`).join('')}<div class="note" style="margin-top:6px">${esc(c.zh)}</div></div>`:'';
+function showCardHtml(c,id){
+  return c?`<button class="btn flash paperbtn" data-paper="${esc(id)}"><span class="pb-t">🎫 買票提示!</span><span class="pb-s">點開給櫃台人員看</span></button>`:'';
+}
+function openPaper(c){
+  if($('#paperWrap')) return;
+  const w=document.createElement('div');w.id='paperWrap';w.className='paperwrap';
+  w.innerHTML=`<div class="paper" role="dialog" aria-modal="true" aria-label="給櫃台人員看的購票資訊"><i class="pbg"></i><i class="rod t"></i><i class="rod b"></i>
+    <button class="paperx" data-act="paper-close" aria-label="關閉">${I.x}</button>
+    <div class="paperin"><div class="plabel">${esc(c.label)}</div>${c.ja.map((x,i)=>`<div class="pjp${i===0?' first':''}">${esc(x)}</div>`).join('')}<div class="pzh">${esc(c.zh)}</div></div></div>`;
+  document.body.appendChild(w);
+  document.body.style.overflow='hidden';
+}
+function closePaper(){
+  const w=$('#paperWrap'); if(!w||w.classList.contains('closing')) return;
+  const done=()=>{w.remove();if(!S.sheet)document.body.style.overflow=''};
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){done();return}
+  w.classList.add('closing');
+  w.querySelector('.pbg').addEventListener('animationend',done,{once:true});
+  setTimeout(done,1000);
 }
 function imgsHtml(x){
   const imgs=(x.transit?.images||[]);
@@ -327,7 +344,7 @@ function imgsHtml(x){
 }
 // 去 dest 要看的全部內容：給櫃台的卡片、路線、實拍圖
 function routeBundle(dest,from){
-  return `${showCardHtml(dest.showCard)}${dest.approx?`<div class="note">定位點是約略位置。搭 Uber 或導航前，請在地圖上確認上車點和目的地。</div>`:''}${routeCard(dest.transit,from?.name)}${imgsHtml(dest)}`;
+  return `${showCardHtml(dest.showCard,dest.id)}${dest.approx?`<div class="note">定位點是約略位置。搭 Uber 或導航前，請在地圖上確認上車點和目的地。</div>`:''}${routeCard(dest.transit,from?.name)}${imgsHtml(dest)}`;
 }
 function sheetStop(s){
   const prev=prevOf(s); const now=jst(); const st=hoursState(s,now);
@@ -534,7 +551,7 @@ async function exportAlbum(onlyMine){
 
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-day],[data-tab],[data-act],[data-open],[data-shoot],[data-visit],[data-edit],[data-del],[data-view],[data-copy],[data-rename]');
+  const t=e.target.closest('[data-day],[data-tab],[data-act],[data-open],[data-shoot],[data-visit],[data-edit],[data-del],[data-view],[data-copy],[data-rename],[data-paper]');
   if(!t) return;
   const d=t.dataset;
   if(d.day){S.day=d.day;ls.set('day',{d:d.day,at:jst().date});render();window.scrollTo({top:0})}
@@ -543,10 +560,12 @@ document.addEventListener('click',e=>{
   else if(d.shoot) startShoot(d.shoot);
   else if(d.view) openSheet({type:'photo',id:d.view,back:S.sheet});
   else if(d.edit) openSheet({type:'form',id:d.edit});
+  else if(d.paper){const c=S.stops.find(x=>x.id===d.paper)?.showCard;if(c)openPaper(c)}
   else if(d.rename){askName(true)}
   else if(d.copy){const v=d.copy;navigator.clipboard?.writeText(v).then(()=>toast('已複製 '+v),()=>toast(v))}
   else if(d.visit){const s=S.stops.find(x=>x.id===d.visit);if(s&&S.db)S.db.saveStop(s.id,{visited:!s.visited}).catch(()=>toast('儲存失敗'))}
   else if(d.del){S.db?.deleteStop(d.del).then(()=>{toast('已刪除');closeSheet()},()=>toast('刪除失敗'))}
+  else if(d.act==='paper-close'){closePaper()}
   else if(d.act==='close'){ if(S.sheet?.type==='photo'&&S.sheet.back){S.sheet=S.sheet.back;renderSheet()} else closeSheet() }
   else if(d.act==='add'){ openSheet({type:'form',day:S.day}) }
   else if(d.act==='askdel'){S.sheet.confirmDel=true;renderSheet()}
@@ -558,7 +577,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('submit',e=>{if(e.target.id==='stopForm'){e.preventDefault();submitForm(e.target)}});
 $('#cam').addEventListener('change',e=>onShot(e.target.files[0]));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheet)closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#paperWrap'))closePaper();else if(S.sheet)closeSheet()}});
 
 /* ---------- ticking: clock, flash alerts, closing alerts ---------- */
 function tick(){
