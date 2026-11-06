@@ -1,6 +1,6 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 12;
+export const SEED_VERSION = 13;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#B3122D', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
@@ -159,7 +159,7 @@ export const STOPS = [
   {
     id: 'd2-nishiki', photo: 'assets/p-d2-nishiki.jpg', art: 'market', day: '2026-11-12', order: 30, time: '14:00', name: '錦市場・河原町', nameJa: '錦市場', lat: 35.005, lng: 135.765, approx: true,
     notes: '以「錦市場」為導航，由西往東逛，接寺町、新京極，再到河原町購物或喝咖啡。想逛哪裡就逛哪裡，不必走完。前往高台寺前預留叫車時間。',
-    transit: { summary: '餐廳在錦市場西側附近，步行即可', minutes: 5, legs: [walk(5, '沿市場由西往東')] },
+    transit: { summary: '錦市場在餐廳東側，步行即可', minutes: 5, legs: [walk(5, '沿市場由西往東')] },
   },
   {
     id: 'd2-kodaiji', photo: 'assets/p-d2-kodaiji.jpg', art: 'temple', day: '2026-11-12', order: 40, time: '16:00', name: '高台寺（含夜間點燈）', nameJa: 'こうだいじ 高台寺',
