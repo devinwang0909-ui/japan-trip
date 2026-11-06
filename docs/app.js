@@ -318,6 +318,13 @@ function routeCard(t,fromName){
 function showCardHtml(c,id){
   return c?`<button class="btn flash paperbtn" data-paper="${esc(id)}"><span class="pb-t">🎫 買票提示!</span><span class="pb-s">點開給櫃台人員看</span></button>`:'';
 }
+function openImgView(src,caption){
+  if($('#imgView')) return;
+  const w=document.createElement('div');w.id='imgView';w.className='imgview';
+  w.innerHTML=`<div class="iv-bar"><div class="iv-cap">${esc(caption||'')}</div><button class="iv-x" data-act="imgview-close" aria-label="關閉">${I.x}</button></div><div class="iv-body"><img src="${esc(src)}" alt="" data-act="imgview-zoom"></div><div class="iv-hint">點圖可放大、再點縮回；放大後可拖曳</div>`;
+  document.body.appendChild(w); document.body.style.overflow='hidden';
+}
+function closeImgView(){const w=$('#imgView');if(!w)return;w.remove();if(!S.sheet)document.body.style.overflow=''}
 function openPaper(c){
   if($('#paperWrap')) return;
   const w=document.createElement('div');w.id='paperWrap';w.className='paperwrap';
@@ -349,7 +356,7 @@ function imgsHtml(x){
 }
 // 去 dest 要看的全部內容：給櫃台的卡片、路線、實拍圖
 function routeBundle(dest,from){
-  return `${showCardHtml(dest.showCard,dest.id)}${dest.approx?`<div class="note">定位點是約略位置。搭 Uber 或導航前，請在地圖上確認上車點和目的地。</div>`:''}${routeCard(dest.transit,from?.name)}${floorMapHtml(dest)}${imgsHtml(dest)}`;
+  return `${showCardHtml(dest.showCard,dest.id)}${dest.approx?`<div class="note">定位點是約略位置。搭 Uber 或導航前，請在地圖上確認上車點和目的地。</div>`:''}${routeCard(dest.transit,from?.name)}${imgsHtml(dest)}`;
 }
 function sheetRoute(s){
   const prev=prevOf(s);
@@ -371,6 +378,7 @@ function sheetStop(s){
   <div class="wrap">
     ${st&&st.kind!=='info'&&st.kind!=='open'?`<div class="banner ${st.kind==='soon'?'warn':'bad'}"><div><b>${esc(st.text)}</b></div></div>`:''}
     <div class="card"><div class="label" style="margin-bottom:8px">這站資訊</div>
+      <div class="infogrid${s.floorMap?' hasmap':''}"><div class="infomain">
       <dl class="kv">
         ${(h.open||h.close)?`<dt>營業</dt><dd class="mono">${esc(h.open||'')}–${esc(h.close||'')}</dd>`:''}
         ${h.lastEntry?`<dt>最後入場</dt><dd class="mono">${esc(h.lastEntry)}</dd>`:''}
@@ -382,6 +390,7 @@ function sheetStop(s){
       </dl>
       ${!(h.open||h.close||s.price||s.address||s.addressJa)?'<div class="note">還沒填營業時間或門票。</div>':''}
       ${s.notes?`<p style="margin:10px 0 0;white-space:pre-wrap">${esc(s.notes)}</p>`:''}
+      </div>${s.floorMap?`<button class="mapthumb" data-imgview="${esc(s.id)}" aria-label="放大樓層圖"><img src="${esc(s.floorMap.src)}" alt="" loading="lazy"><span>樓層圖・點擊放大</span></button>`:''}</div>
     </div>
     ${s.transit||s.showCard?routeBundle(s,prev):''}
     <div class="card"><div class="row" style="margin-bottom:8px"><div class="label grow">打卡照片・每人一張</div><span class="note">${all.length} 張</span></div>
@@ -547,11 +556,12 @@ async function exportAlbum(onlyMine){
 
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-day],[data-tab],[data-act],[data-open],[data-shoot],[data-visit],[data-edit],[data-del],[data-view],[data-copy],[data-rename],[data-paper],[data-route]');
+  const t=e.target.closest('[data-day],[data-tab],[data-act],[data-open],[data-shoot],[data-visit],[data-edit],[data-del],[data-view],[data-copy],[data-rename],[data-paper],[data-route],[data-imgview]');
   if(!t) return;
   const d=t.dataset;
   if(d.day){S.day=d.day;ls.set('day',{d:d.day,at:jst().date});render();window.scrollTo({top:0})}
   else if(d.tab){S.tab=d.tab;render();window.scrollTo({top:0})}
+  else if(d.imgview){const m=S.stops.find(x=>x.id===d.imgview)?.floorMap;if(m)openImgView(m.src,m.caption)}
   else if(d.route){e.preventDefault();openSheet({type:'route',id:d.route})}
   else if(d.open){e.preventDefault();openSheet({type:'stop',id:d.open})}
   else if(d.shoot) startShoot(d.shoot);
@@ -563,6 +573,8 @@ document.addEventListener('click',e=>{
   else if(d.visit){const s=S.stops.find(x=>x.id===d.visit);if(s&&S.db)S.db.saveStop(s.id,{visited:!s.visited}).catch(()=>toast('儲存失敗'))}
   else if(d.del){S.db?.deleteStop(d.del).then(()=>{toast('已刪除');closeSheet()},()=>toast('刪除失敗'))}
   else if(d.act==='jump-next'){document.getElementById('nextAnchor')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}
+  else if(d.act==='imgview-close'){closeImgView()}
+  else if(d.act==='imgview-zoom'){t.closest('.iv-body').classList.toggle('zoomed')}
   else if(d.act==='paper-close'){closePaper()}
   else if(d.act==='close'){ if(S.sheet?.type==='photo'&&S.sheet.back){S.sheet=S.sheet.back;renderSheet()} else closeSheet() }
   else if(d.act==='add'){ openSheet({type:'form',day:S.day}) }
@@ -575,7 +587,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('submit',e=>{if(e.target.id==='stopForm'){e.preventDefault();submitForm(e.target)}});
 $('#cam').addEventListener('change',e=>onShot(e.target.files[0]));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#paperWrap'))closePaper();else if(S.sheet)closeSheet()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#imgView'))closeImgView();else if($('#paperWrap'))closePaper();else if(S.sheet)closeSheet()}});
 
 /* ---------- ticking: clock, flash alerts, closing alerts ---------- */
 function tick(){
