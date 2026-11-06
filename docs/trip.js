@@ -1,6 +1,6 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 5;
+export const SEED_VERSION = 6;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#B3122D', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
@@ -62,13 +62,13 @@ export const STOPS = [
     notes: '15:00 起可入住，還不能進房先寄放行李，休息約 30 分鐘。櫃台在 2 樓。',
     transit: {
       summary: '關西機場站 → 南海電鐵到難波 → 御堂筋線一站到心齋橋',
-      enter: '南海 關西機場站', exit: '心齋橋 8 號出口（連通飯店）', minutes: 90, fare: '含 Rapi:t 特急券另計',
+      enter: '南海 關西機場站', exit: '心齋橋 8 號出口（連通飯店）', minutes: 48, fare: '含 Rapi:t 特急券另計',
       legs: [
         walk(10, '第一航廈 1 樓到達大廳，跟「鉄道／Railways」指標上 2 樓，走連接通道到關西機場站'),
         { type: 'rail', line: '南海 Rapi:t／空港急行', code: 'NK', color: C.nankai, from: '關西機場', to: '南海難波', direction: 'なんば／難波', minutes: 39, text: 'Rapi:t 需指定席特急券；空港急行不用。不要搭往和歌山市的車。' },
-        { ...walk(5, '南海難波 3 樓：從「北改札／North Gate」出站，跟「Osaka Metro／御堂筋線」一路下樓到 B1'), buf: 15 },
+        walk(5, '南海難波 3 樓：從「北改札／North Gate」出站，跟「Osaka Metro／御堂筋線」一路下樓到 B1'),
         metro({ from: '難波 M20', to: '心齋橋 M19', direction: '梅田／新大阪／箕面萱野', stops: 1, minutes: 1, text: '另刷卡進地鐵。南海票不含這一段。', stationMap: L.yodoya.url }),
-        { ...walk(2, '南改札出站，約 140 公尺。沒有大件行李走 8 號出口連通道進飯店，上 2 樓；帶行李改走 4-A 電梯上地面，過御堂筋到正門'), buf: 10 },
+        walk(2, '南改札出站，約 140 公尺。沒有大件行李走 8 號出口連通道進飯店，上 2 樓；帶行李改走 4-A 電梯上地面，過御堂筋到正門'),
       ],
       images: [...IMG_KIX, ...IMG_HOTEL],
     },
