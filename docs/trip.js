@@ -1,6 +1,6 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 11;
+export const SEED_VERSION = 12;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#B3122D', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };
@@ -130,7 +130,7 @@ export const STOPS = [
 
   /* ---------- 11/12 ---------- */
   {
-    id: 'd2-inari', art: 'torii', day: '2026-11-12', order: 10, time: '09:30', name: '伏見稻荷大社', nameJa: '伏見稲荷大社',
+    id: 'd2-inari', photo: 'assets/p-d2-inari.jpg', art: 'torii', day: '2026-11-12', order: 10, time: '09:30', name: '伏見稻荷大社', nameJa: '伏見稲荷大社',
     addressJa: '京都市伏見区深草藪之内町68', lat: 34.9671, lng: 135.7727, approx: true,
     notes: '建議 08:00 出門。參拜以山下本殿、千本鳥居前段為主，不排登頂。記得買狐狸煎餅。',
     transit: {
@@ -147,7 +147,7 @@ export const STOPS = [
     links: [{ label: '伏見稻荷大社交通', url: 'https://inari.jp/access/' }, L.yodoya, L.yodoyaPhoto, L.keihanTrains],
   },
   {
-    id: 'd2-okuniya', art: 'unagi', day: '2026-11-12', order: 20, time: '12:30', name: '大國屋鰻兵衞（午餐）', nameJa: '大国屋鰻兵衞 おおくにやまんべい',
+    id: 'd2-okuniya', photo: 'assets/p-d2-okuniya.jpg', art: 'unagi', day: '2026-11-12', order: 20, time: '12:30', name: '大國屋鰻兵衞（午餐）', nameJa: '大国屋鰻兵衞 おおくにやまんべい',
     addressJa: '京都市中京区菊屋町534', lat: 35.005, lng: 135.759, approx: true,
     notes: '申請 11/12 12:30、4 人，預約姓名 Tang／YiWei，尚待飯店回覆。現煮飯需等候，用餐留 1～1.5 小時。',
     transit: {
@@ -157,12 +157,12 @@ export const STOPS = [
     links: [{ label: '大國屋鰻兵衞官網', url: 'https://manbei.bubu-unagi.com/' }],
   },
   {
-    id: 'd2-nishiki', art: 'market', day: '2026-11-12', order: 30, time: '14:00', name: '錦市場・河原町', nameJa: '錦市場', lat: 35.005, lng: 135.765, approx: true,
+    id: 'd2-nishiki', photo: 'assets/p-d2-nishiki.jpg', art: 'market', day: '2026-11-12', order: 30, time: '14:00', name: '錦市場・河原町', nameJa: '錦市場', lat: 35.005, lng: 135.765, approx: true,
     notes: '以「錦市場」為導航，由西往東逛，接寺町、新京極，再到河原町購物或喝咖啡。想逛哪裡就逛哪裡，不必走完。前往高台寺前預留叫車時間。',
     transit: { summary: '餐廳在錦市場西側附近，步行即可', minutes: 5, legs: [walk(5, '沿市場由西往東')] },
   },
   {
-    id: 'd2-kodaiji', art: 'temple', day: '2026-11-12', order: 40, time: '16:00', name: '高台寺（含夜間點燈）', nameJa: 'こうだいじ 高台寺',
+    id: 'd2-kodaiji', photo: 'assets/p-d2-kodaiji.jpg', art: 'temple', day: '2026-11-12', order: 40, time: '16:00', name: '高台寺（含夜間點燈）', nameJa: 'こうだいじ 高台寺',
     lat: 35.0003, lng: 135.7807, approx: true,
     hours: { lastEntry: '21:30', close: '22:00', note: '夜間特別開放 10/23～12/13；17:00 點燈。日間時間以官網為準。' },
     notes: '暫排 16:00～17:30。11/12 有開放，成片紅葉依當時葉況。下車後跟「拝観入口」指標走，仍有步行與階梯。',
@@ -173,7 +173,7 @@ export const STOPS = [
     links: [{ label: '高台寺活動資訊', url: 'https://www.kodaiji.com/saiji' }],
   },
   {
-    id: 'd2-moritaya', art: 'pot', day: '2026-11-12', order: 50, time: '18:00', name: 'モリタ屋 木屋町店（晚餐）', nameJa: 'モリタ屋 木屋町店',
+    id: 'd2-moritaya', photo: 'assets/p-d2-moritaya.jpg', art: 'pot', day: '2026-11-12', order: 50, time: '18:00', name: 'モリタ屋 木屋町店（晚餐）', nameJa: 'モリタ屋 木屋町店',
     addressJa: '京都市中京区上大阪町531', lat: 35.0072, lng: 135.7712, approx: true,
     notes: '晚餐暫估 18:00～18:30 開始，訂位尚未確認成功。',
     transit: { summary: '高台寺搭計程車', minutes: 25, legs: [taxi(25, '交通留 20～30 分鐘緩衝')] },
