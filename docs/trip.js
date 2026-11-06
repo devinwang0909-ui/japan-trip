@@ -1,6 +1,6 @@
 // 行程資料（來源：大阪京都四天詳細行程.docx，2026/11/05 版）
 // 改這個檔案的內容後，把 SEED_VERSION 加 1，網站就會把新內容同步給全家。
-export const SEED_VERSION = 10;
+export const SEED_VERSION = 11;
 
 const HOTEL = { lat: 34.6724, lng: 135.4995, approx: true };
 const C = { metro: '#E5171F', nankai: '#B3122D', keihan: '#0F6BB5', jr: '#F08300', loop: '#E60012' };

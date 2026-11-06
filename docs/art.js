@@ -4,6 +4,6 @@ const EMOJI = {
   torii: '⛩️', unagi: '🍱', market: '🏮', temple: '🍁', pot: '🍲', train: '🚆', shrine: '⛩️', bags: '🛍️', steak: '🥩', suitcase: '🧳',
 };
 export const emojiOf = (scene) => EMOJI[scene] || '📍';
-export function photoBanner(src, h = 110) {
-  return `<img class="cov" src="${src}" alt="" loading="lazy" style="height:${h}px;object-fit:cover;object-position:center 35%">`;
+export function photoBanner(src) {
+  return `<img class="cov" src="${src}" alt="" loading="lazy" style="aspect-ratio:2/1;height:auto;object-fit:cover">`;
 }
