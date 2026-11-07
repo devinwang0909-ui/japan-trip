@@ -592,3 +592,5 @@ details.tool .tico{border-radius:10px}
 .banner{border-radius:12px}
 .banner.info{background:var(--ai-soft);color:var(--ink)}
 .scrim{background:rgba(23,23,23,.45)}
+
+.sheet.still,.scrim.still{animation:none!important}

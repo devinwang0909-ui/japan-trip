@@ -1,5 +1,5 @@
 import { createData } from './data.js';
-import { DAY_CITY } from './trip.js';
+import { DAY_CITY, STOPS as BUILTIN_STOPS, INFO as BUILTIN_INFO } from './trip.js';
 import { emojiOf, photoBanner } from './art.js';
 const guessArt=s=>s.art||(/燒肉|烤肉/.test(s.name)?'grill':/鰻/.test(s.name)?'unagi':/神社|大社|稻荷/.test(s.name)?'shrine':/寺/.test(s.name)?'temple':/機場/.test(s.name)?'plane':/飯店|旅館|民宿/.test(s.name)?'hotel':/拉麵|餐|食|吃|壽司|咖啡|居酒屋/.test(s.name)?'pot':/高爾夫|golf/i.test(s.name)?'golf':/寶可夢/.test(s.name)?'poke':/市場|商店街/.test(s.name)?'market':'bags');
 (() => {
@@ -107,15 +107,13 @@ function renderDays(){
   $('#days').hidden = S.tab!=='plan';
   $('#ttl').textContent = S.tab==='plan'?(S.info?.title||'大阪京都家族旅'):({tools:'工具',album:'旅行相簿',sos:'緊急資訊'}[S.tab]||'');
 }
+function setHtml(el,html){ if(el._h===html) return false; el._h=html; el.innerHTML=html; return true }
 function render(){
   syncLens();
   renderDays();
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.setAttribute('aria-current',t.dataset.tab===S.tab?'page':'false'));
   const v=$('#view');
-  if(S.tab==='plan') v.innerHTML=viewPlan();
-  else if(S.tab==='tools') v.innerHTML=viewTools();
-  else if(S.tab==='album') v.innerHTML=viewAlbum();
-  else v.innerHTML=viewSOS();
+  setHtml(v,S.tab==='plan'?viewPlan():S.tab==='tools'?viewTools():S.tab==='album'?viewAlbum():viewSOS());
   if(S.sheet) renderSheet();
 }
 
@@ -123,7 +121,6 @@ function viewPlan(){
   const now=jst(); const day=S.day; const list=sorted(day);
   const out=[];
   if(!S.ready&&!S.stops.length) out.push(`<div class="status">載入行程中…</div>`);
-  if(S.stale) out.push(`<div class="banner info" role="status"><div class="grow">連不上資料庫，先顯示這支手機上次存的行程${S.dbErr?`（${esc(S.dbErr)}）`:''}。${navigator.onLine===false?'目前手機沒有網路。':''}</div><button class="btn sm" data-act="reload">重新連線</button></div>`);
   const isToday = day===now.date;
   const nxt = isToday ? list.find(s=>!s.visited) : null;
   if(nxt){
@@ -420,7 +417,7 @@ function viewSOS(){
 
 /* ---------- sheets ---------- */
 function openSheet(s){S.sheet=s;renderSheet()}
-function closeSheet(){S.sheet=null;$('#layer').innerHTML='';document.body.style.overflow=''}
+function closeSheet(){S.sheet=null;$('#layer').innerHTML='';$('#layer')._h='';document.body.style.overflow=''}
 function renderSheet(){
   const sh=S.sheet; if(!sh){return}
   let inner='';
@@ -430,9 +427,10 @@ function renderSheet(){
   else if(sh.type==='photo'){const p=S.photos.find(x=>x.id===sh.id); if(!p){closeSheet();return}
     if(!S.full[p.id]&&S.db){S.full[p.id]='loading';S.db.getFull(p.id).then(u=>{S.full[p.id]=u||p.thumb;if(S.sheet?.id===p.id)renderSheet()}).catch(()=>{S.full[p.id]=p.thumb;renderSheet()})}
     const fu=S.full[p.id]&&S.full[p.id]!=='loading'?S.full[p.id]:p.thumb;
-    $('#layer').innerHTML=`<div class="lightbox" data-act="close"><img src="${esc(fu||'')}" alt="">${p.caption?`<div class="lbcap">${esc(p.caption)}</div>`:''}<div>${esc(who(p.uid))}・${esc(new Date(p.takenAt).toLocaleString('zh-TW',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${p.late?'・遲到':''}</div><button class="btn" data-act="close">關閉</button></div>`;return}
-  const keepScroll=$('#layer .sheet')?.scrollTop;
-  $('#layer').innerHTML=`<div class="scrim" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true">${inner}</div>`;
+    $('#layer')._h=''; $('#layer').innerHTML=`<div class="lightbox" data-act="close"><img src="${esc(fu||'')}" alt="">${p.caption?`<div class="lbcap">${esc(p.caption)}</div>`:''}<div>${esc(who(p.uid))}・${esc(new Date(p.takenAt).toLocaleString('zh-TW',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${p.late?'・遲到':''}</div><button class="btn" data-act="close">關閉</button></div>`;return}
+  const had=!!$('#layer .sheet'); const keepScroll=$('#layer .sheet')?.scrollTop;
+  const html=`<div class="scrim${had?' still':''}" data-act="close"></div><div class="sheet${had?' still':''}" role="dialog" aria-modal="true">${inner}</div>`;
+  if(!setHtml($('#layer'),html)) return;
   if(keepScroll) $('#layer .sheet').scrollTop=keepScroll;
   document.body.style.overflow='hidden';
 }
@@ -913,7 +911,7 @@ function tick(){
     if(nxt){const st=hoursState(nxt,now);const seen=ls.get('closeSeen',{});
       if(st?.kind==='soon'&&!seen[nxt.id]){seen[nxt.id]=1;ls.set('closeSeen',seen);vib([400,150,400]);toast(`注意：${nxt.name} ${st.text}`,6000)}}
   }
-  if(S.tab==='plan'&&!S.sheet) $('#view').innerHTML=viewPlan();
+  if(S.tab==='plan'&&!S.sheet) setHtml($('#view'),viewPlan());
 }
 
 /* ---------- boot ---------- */
@@ -941,8 +939,10 @@ async function loadWeather(){
   }catch{}
 }
 function loadCache(){
-  const c=ls.get('cache2',null); if(!c) return;
-  S.stops=c.stops||[];S.info=c.info||null;S.photos=c.photos||[];
+  const c=ls.get('cache2',null);
+  if(c&&(c.stops||[]).length){S.stops=c.stops;S.info=c.info||BUILTIN_INFO;S.photos=c.photos||[];return}
+  // 第一次開、又沒有網路：先用內建行程，連上資料庫後自動換成共用版本
+  S.stops=BUILTIN_STOPS.map(s=>({...s,visited:false}));S.info=BUILTIN_INFO;
 }
 let cacheT; function saveCache(){clearTimeout(cacheT);cacheT=setTimeout(()=>{if(!ls.set('cache2',{stops:S.stops,info:S.info,photos:S.photos}))ls.set('cache2',{stops:S.stops,info:S.info,photos:[]})},500)}
 async function boot(){
