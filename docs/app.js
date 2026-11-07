@@ -7,7 +7,7 @@ const DAYS = ['2026-11-11','2026-11-12','2026-11-13','2026-11-14'];
 const DOW = ['日','一','二','三','四','五','六'];
 const ONTIME_MIN = 15;              // 隨機拍：開放後幾分鐘內算準時
 const S = {tab:'plan', day:null, stops:[], info:null, weather:{}, photos:[], uid:null,
-  canWrite:true, db:null, ready:false, stale:false, sheet:null, pending:null, full:{}, timer:null};
+  canWrite:true, db:null, ready:false, stale:false, sheet:null, pending:null, full:{}, timer:null, fx:{rate:0.21,at:'',live:false,jpy:'',twd:''}};
 
 /* ---------- utils ---------- */
 const $ = s => document.querySelector(s);
@@ -105,7 +105,7 @@ function renderDays(){
   const now=jst();
   $('#days').innerHTML=DAYS.map((d,i)=>`<button class="day${d===now.date?' today':''}" data-day="${d}" aria-pressed="${d===S.day}"><b>${md(d)}</b><small>Day ${i+1}・${DOW[dowOf(d)]}</small></button>`).join('');
   $('#days').hidden = S.tab!=='plan';
-  $('#ttl').textContent = S.tab==='plan'?(S.info?.title||'大阪京都家族旅'):({timer:'集合計時',album:'旅行相簿',sos:'緊急資訊'}[S.tab]||'');
+  $('#ttl').textContent = S.tab==='plan'?(S.info?.title||'大阪京都家族旅'):({tools:'工具',album:'旅行相簿',sos:'緊急資訊'}[S.tab]||'');
 }
 function render(){
   syncLens();
@@ -113,7 +113,7 @@ function render(){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.setAttribute('aria-current',t.dataset.tab===S.tab?'page':'false'));
   const v=$('#view');
   if(S.tab==='plan') v.innerHTML=viewPlan();
-  else if(S.tab==='timer') v.innerHTML=viewTimer();
+  else if(S.tab==='tools') v.innerHTML=viewFx()+viewTimer();
   else if(S.tab==='album') v.innerHTML=viewAlbum();
   else v.innerHTML=viewSOS();
   if(S.sheet) renderSheet();
@@ -254,6 +254,39 @@ function flashRow(f){
 const RING=2*Math.PI*88;
 const fmtT=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
 function timerLeft(){return S.timer&&!S.timer.cancelled?S.timer.endsAt-Date.now():null}
+/* ---------- 匯率計算 ---------- */
+const FX_DEFAULT=0.21;
+const fxFmt=(n,d=0)=>Number.isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d}):'';
+function viewFx(){
+  const f=S.fx;
+  const note=f.live?`即時匯率，更新於 ${esc(f.at||'')}`:'離線預設匯率，連網後自動更新，也可以手動改';
+  return `<div class="card fx"><div class="label">匯率計算・日圓 ↔ 台幣</div>
+    <div class="fxrow">
+      <label class="fxbox"><span>日圓 JPY</span><div><b>¥</b><input id="fxJpy" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(f.jpy)}"></div></label>
+      <label class="fxbox"><span>台幣 TWD</span><div><b>NT$</b><input id="fxTwd" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(f.twd)}"></div></label>
+    </div>
+    <div class="chips">${[500,1000,3000,5000,10000,30000].map(v=>`<button class="fxchip" data-fx="${v}">¥${fxFmt(v)}</button>`).join('')}<button class="fxchip ghost" data-fx="clear">清除</button></div>
+    <label class="fxrate"><span>1 日圓 =</span><input id="fxRate" inputmode="decimal" value="${esc(String(f.rate))}"><span>台幣</span></label>
+    <div class="note">${note}</div></div>`;
+}
+async function loadFx(){
+  const c=ls.get('fx',null); if(c&&c.rate) Object.assign(S.fx,{rate:c.rate,at:c.at,live:!!c.live});
+  if(c&&Date.now()-(c.ts||0)<6*3600e3) return;
+  try{
+    const r=await fetch('https://open.er-api.com/v6/latest/JPY'); if(!r.ok) throw 0;
+    const j=await r.json(); const rate=j?.rates?.TWD; if(!rate) throw 0;
+    const at=new Date().toLocaleString('zh-TW',{timeZone:'Asia/Taipei',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    Object.assign(S.fx,{rate:+rate.toFixed(5),at,live:true}); ls.set('fx',{rate:S.fx.rate,at,live:true,ts:Date.now()});
+    if(S.tab==='tools'&&!document.activeElement?.matches?.('input')) render();
+  }catch{}
+}
+function fxInput(id,val){
+  const f=S.fx; const n=parseFloat(String(val).replace(/,/g,''));
+  if(id==='fxRate'){ if(n>0){f.rate=n;ls.set('fx',{rate:n,at:f.at,live:false,ts:Date.now()});f.live=false;const j=parseFloat(f.jpy);if(j>=0){f.twd=String(Math.round(j*n*100)/100);const e=$('#fxTwd');if(e)e.value=f.twd}} return }
+  if(id==='fxJpy'){f.jpy=val; const e=$('#fxTwd'); f.twd=Number.isFinite(n)?String(Math.round(n*f.rate*100)/100):''; if(e)e.value=f.twd}
+  if(id==='fxTwd'){f.twd=val; const e=$('#fxJpy'); f.jpy=Number.isFinite(n)?String(Math.round(n/f.rate)):''; if(e)e.value=f.jpy}
+}
+document.addEventListener('input',e=>{const id=e.target?.id;if(id==='fxJpy'||id==='fxTwd'||id==='fxRate')fxInput(id,e.target.value)});
 function viewTimer(){
   const left=timerLeft(); const t=S.timer;
   if(left!=null&&left>0){
@@ -316,7 +349,7 @@ function timerTick(){
       const seen=ls.get('tmrSeen',{});
       if(!seen[S.timer.id]&&(-left)<30*60000){seen[S.timer.id]=1;ls.set('tmrSeen',seen);showTimerDone(S.timer,-left/1000)}
     }
-    if(S.tab==='timer'){
+    if(S.tab==='tools'){
       const n=$('#tmrNum');
       if(left>0&&n){n.textContent=fmtT(left);const a=$('#tmrArc');if(a)a.style.strokeDashoffset=RING*(1-left/((S.timer.minutes||1)*60000))}
       else if(left<=0&&n) render();
@@ -655,7 +688,7 @@ async function exportAlbum(onlyMine){
 
 /* ---------- events ---------- */
 /* ---------- 液態玻璃底部欄 ---------- */
-const TAB_ORDER=['plan','timer','__add','album','sos'];
+const TAB_ORDER=['plan','album','__add','tools','sos'];
 let pillDrag=null,lensIdx=0;
 function pillEls(){const pill=$('#pill');return pill?{pill,lens:$('#lens'),tabs:[...pill.querySelectorAll('.tab')]}:null}
 function lensX(i){const e=pillEls();return e?i*(e.pill.clientWidth-10)/5:0}
@@ -702,15 +735,16 @@ function initPill(){
   syncLens();
 }
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-day],[data-tab],[data-act],[data-open],[data-shoot],[data-visit],[data-edit],[data-del],[data-view],[data-copy],[data-rename],[data-paper],[data-route],[data-imgview],[data-tmr],[data-tmrpre]');
+  const t=e.target.closest('[data-day],[data-tab],[data-act],[data-open],[data-shoot],[data-visit],[data-edit],[data-del],[data-view],[data-copy],[data-rename],[data-paper],[data-route],[data-imgview],[data-tmr],[data-tmrpre],[data-fx]');
   if(!t) return;
   const d=t.dataset;
   if(d.day){S.day=d.day;ls.set('day',{d:d.day,at:jst().date});render();window.scrollTo({top:0})}
   else if(d.tab){S.tab=d.tab;render();window.scrollTo({top:0})}
+  else if(d.fx){const f=S.fx;if(d.fx==='clear'){f.jpy='';f.twd=''}else{f.jpy=d.fx;f.twd=String(Math.round(+d.fx*f.rate*100)/100)}const j=$('#fxJpy'),t=$('#fxTwd');if(j)j.value=f.jpy;if(t)t.value=f.twd}
   else if(d.tmr){timerAction(d.tmr)}
   else if(d.tmrpre){S.tmrMin=+d.tmrpre;const c=$('#tmrCustom');if(c)c.value=d.tmrpre;document.querySelectorAll('.pre').forEach(b=>b.classList.toggle('on',b.dataset.tmrpre===d.tmrpre))}
   else if(d.act==='push-on'){enablePush()}
-  else if(d.act==='tmr-ok'){if(S.timer)S.db?.ack?.(`timer-${S.timer.id}-${S.timer.endsAt}`).catch(()=>{});stopRinging();$('#tmrDone')?.remove();if(S.tab==='timer')render()}
+  else if(d.act==='tmr-ok'){if(S.timer)S.db?.ack?.(`timer-${S.timer.id}-${S.timer.endsAt}`).catch(()=>{});stopRinging();$('#tmrDone')?.remove();if(S.tab==='tools')render()}
   else if(d.imgview){const m=S.stops.find(x=>x.id===d.imgview)?.floorMap;if(m)openImgView(m.src,m.caption)}
   else if(d.route){e.preventDefault();openSheet({type:'route',id:d.route})}
   else if(d.open){e.preventDefault();openSheet({type:'stop',id:d.open})}
@@ -790,7 +824,7 @@ function loadCache(){
 }
 let cacheT; function saveCache(){clearTimeout(cacheT);cacheT=setTimeout(()=>{if(!ls.set('cache2',{stops:S.stops,info:S.info,photos:S.photos}))ls.set('cache2',{stops:S.stops,info:S.info,photos:[]})},500)}
 async function boot(){
-  initPill(); initDay(); S.uid=ls.get('me',null); loadCache(); render(); tick();
+  loadFx(); initPill(); initDay(); S.uid=ls.get('me',null); loadCache(); render(); tick();
   setInterval(tick,15000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();loadWeather()}});
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
@@ -803,7 +837,7 @@ async function boot(){
   db.onStops((list,fromCache)=>{S.stops=list;if(!fromCache){clearTimeout(timer);S.stale=false}S.ready=true;saveCache();render()},err);
   db.onInfo(i=>{S.info=i;if(i?.title)$('#ttl').textContent=i.title;saveCache();render()},err);
   db.onPhotos(list=>{S.photos=list;saveCache();render()},err);
-  db.onTimer(t=>{S.timer=t;timerTick();if(S.tab==='timer'&&!document.activeElement?.matches?.('input'))render()},()=>{});
+  db.onTimer(t=>{S.timer=t;timerTick();if(S.tab==='tools'&&!document.activeElement?.matches?.('input'))render()},()=>{});
   if(!S.uid) setTimeout(()=>{if(!S.uid)askName()},600);
   if(S.uid&&db.enablePush&&ls.get('pushOn',false)&&typeof Notification!=='undefined'&&Notification.permission==='granted') db.enablePush(S.uid).catch(()=>{});
 }

@@ -462,3 +462,17 @@ body{font-size:16px;line-height:1.5;letter-spacing:-.005em;-webkit-font-smoothin
 body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
 .toast{bottom:calc(98px + env(safe-area-inset-bottom,0px))}
 @media (prefers-reduced-motion:reduce){.pill .lens,.pill .tab svg{transition:none}}
+
+/* 匯率計算 */
+.fx{display:flex;flex-direction:column;gap:14px;padding:18px 16px}
+.fxrow{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.fxbox{min-width:0;display:flex;flex-direction:column;gap:6px;background:var(--fill);border-radius:16px;padding:12px 14px}
+.fxbox>span{font-size:12px;color:var(--muted);font-weight:600}
+.fxbox>div{display:flex;align-items:baseline;gap:8px}
+.fxbox b{font-size:20px;color:var(--muted);font-weight:600}
+.fxbox input{flex:1;min-width:0;border:0;background:transparent;font-size:32px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;padding:0;outline:none;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.fxchip{border:0;border-radius:999px;background:var(--ai-soft);color:var(--ai);font-weight:600;font-size:14px;padding:8px 14px;min-height:36px}
+.fxchip.ghost{background:var(--fill);color:var(--muted)}
+.fxrate{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.fxrate input{width:96px;border:0;background:var(--fill);border-radius:10px;padding:8px 10px;font-size:16px;font-weight:600;color:var(--ink)}
