@@ -121,7 +121,6 @@ function viewPlan(){
   const out=[];
   if(!S.ready&&!S.stops.length) out.push(`<div class="status">載入行程中…</div>`);
   if(S.stale) out.push(`<div class="banner info">目前連不上資料庫，顯示的是這支手機上次存下的行程。</div>`);
-  // alerts for next stop
   const isToday = day===now.date;
   const nxt = isToday ? list.find(s=>!s.visited) : null;
   if(nxt){
@@ -129,40 +128,41 @@ function viewPlan(){
     if(st&&st.kind==='soon') out.push(`<div class="banner warn" role="alert"><div><b>下一站「${esc(nxt.name)}」快打烊了</b>${esc(st.text)}。現在出發可能來不及，考慮先改去別站。</div></div>`);
     if(st&&st.kind==='off') out.push(`<div class="banner bad" role="alert"><div><b>「${esc(nxt.name)}」${esc(st.text)}</b>可以跳過這站，或在行程裡把它標為已去過。</div></div>`);
   }
-  out.push(viewFlash(day,now));
-  out.push(viewWeather(day));
+  // 1) 需要你行動的事放最前面：拍照時間、下一站
+  const flash=flashState(day,now);
+  if(flash.active) out.push(flashAlert(flash,day));
   if(nxt) out.push(viewNext(nxt,now));
   else if(now.date<DAYS[0] && day===DAYS[0] && list[0]){
     const days=Math.round((Date.parse(DAYS[0]+'T00:00:00+09:00')-Date.now())/864e5);
-    out.push(`<div class="card next"><div class="label">還有 ${Math.max(days,0)} 天出發</div><h2>第一站：${esc(list[0].name)}</h2><div class="note">出發當天這裡會顯示「下一站」怎麼去。</div></div>`);
+    out.push(`<div class="card next"><div class="label">還有 ${Math.max(days,0)} 天出發</div><h2>第一站：${esc(list[0].name)}</h2></div>`);
   }
-  // timeline
+  // 2) 背景資訊壓成一條：天氣、隨機拍
+  out.push(`<div class="card strip">${viewWeather(day)}${flash.active?'':flashRow(flash)}</div>`);
+  // 3) 行程時間軸
   if(!list.length){
-    out.push(`<div class="empty"><h3>${md(day)} 還沒有行程</h3><p>行程排好後會按時間列在這裡。<br>想臨時加一個地方，點下方「新增景點」。</p></div>`);
+    out.push(`<div class="empty"><h3>${md(day)} 還沒有行程</h3><p>想臨時加一個地方，點下方「新增景點」。</p></div>`);
   } else {
-    const tl=[];
-    const hotel=hotelFor(day);
+    const tl=[]; const hotel=hotelFor(day);
     list.forEach((s,i)=>{
       if(s.transit) tl.push(legRow(s,list[i-1]));
       const st=hoursState(s,isToday?now:null);
       const ph=S.photos.filter(p=>p.key==='s-'+s.id).length;
+      const pills=[
+        s.visited?`<span class="pill go">已抵達</span>`:'',
+        s.kind==='added'?`<span class="pill ai">臨時加入</span>`:'',
+        st&&st.kind!=='info'&&st.kind!=='open'?`<span class="pill ${st.kind==='soon'?'warn':'bad'}">${esc(st.text)}</span>`:'',
+        ph?`<span class="pill ai">${ph} 張照片</span>`:'',
+      ].filter(Boolean).join('');
       tl.push(`<button class="stop${s.visited?' visited':''}${s.kind==='added'?' added':''}" data-open="${esc(s.id)}">
-        <div class="time">${esc(s.time||'')}</div>
         <div class="body">
-          ${s.photo?photoBanner(s.photo,100):''}
+          ${s.photo?`<div class="ph2">${photoBanner(s.photo)}${s.time?`<span class="tchip">${esc(s.time)}</span>`:''}</div>`:(s.time?`<div class="tm">${esc(s.time)}</div>`:'')}
           <h3><span class="em" aria-hidden="true">${emojiOf(guessArt(s))}</span>${esc(s.name)}</h3>
-          ${s.nameJa?`<div class="note">${esc(s.nameJa)}</div>`:''}
-          <div class="meta">
-            ${s.visited?`<span class="pill go">已抵達</span>`:''}
-            ${s.kind==='added'?`<span class="pill ai">臨時加入</span>`:''}
-            ${st?`<span class="pill ${st.kind==='soon'?'warn':st.kind==='off'?'bad':'ai'}">${esc(st.text)}</span>`:''}
-            ${s.price?`<span>${esc(s.price)}</span>`:''}
-            ${ph?`<span>${ph} 張照片</span>`:''}
-          </div>
+          ${s.nameJa?`<div class="ja1">${esc(s.nameJa)}</div>`:''}
+          ${pills?`<div class="meta">${pills}</div>`:''}
         </div></button>`);
     });
-    if(hotel) tl.push(`<div class="leg"><div class="rail"></div><div class="what">回到住宿：${esc(hotel.name)}</div></div>`);
-    out.push(`<div><div class="label" style="margin-bottom:2px">${md(day)}（${DOW[dowOf(day)]}）行程</div><div class="note" style="margin-bottom:8px">點景點看營業資訊，點兩站之間的路線看怎麼搭。</div><div class="tl">${tl.join('')}</div></div>`);
+    if(hotel&&list.length) tl.push(`<div class="lg end">回到住宿・${esc(hotel.name)}</div>`);
+    out.push(`<div><div class="dayhead"><b>${md(day)}（${DOW[dowOf(day)]}）</b><span>${list.length} 站</span></div><div class="tl">${tl.join('')}</div></div>`);
   }
   return out.join('');
 }
@@ -174,7 +174,7 @@ function legRow(s,prev){
     else chips.push(`<span class="chip" style="--c:${esc(l.color||'#777')}"><i>${esc(l.code||'')}</i>${esc(l.line||'')}</span>`);
   });
   if(!chips.length&&t.summary) chips.push(`<span>${esc(t.summary)}</span>`);
-  return `<button class="leg" data-route="${esc(s.id)}"><div class="rail"></div><div class="what">${chips.join('')}${t.minutes?`<span class="mono">約 ${t.minutes} 分</span>`:''}${t.fare?`<span class="mono">${esc(t.fare)}</span>`:''}${t.summary?`<div class="legsum">${esc(t.summary)}</div>`:''}<div class="legcta">看完整搭車步驟、出口與實拍照片 ›</div></div></button>`;
+  return `<button class="lg" data-route="${esc(s.id)}"><span class="lgchips">${chips.join('')}</span><span class="lgend">${t.minutes?`<span class="mono">約 ${t.minutes} 分</span>`:''}<span class="chev">›</span></span></button>`;
 }
 function viewNext(s,now){
   const prev=prevOf(s); const st=hoursState(s,now);
@@ -197,38 +197,36 @@ function viewWeather(day){
   const w=S.weather[day];
   const city=w?.city||S.info?.city||'';
   const q=encodeURIComponent((city||'日本')+' 天氣');
-  if(!w) return `<div class="card"><div class="row"><div class="grow"><div class="label">${md(day)} 天氣</div><div class="note">每天早上自動更新；出發前 7 天內才會有預報。</div></div><a class="btn" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">查看</a></div></div>`;
+  if(!w) return `<div class="srow"><span class="sico">☁️</span><div class="grow"><b>${md(day)} 天氣</b><div class="note">出發前 7 天內才有預報</div></div><a class="btn ghost sm" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">查看</a></div>`;
   const hrs=(w.hourly||[]).map(h=>`<div>${esc(h.h)}<b>${Math.round(h.t)}°</b>${h.pop!=null?h.pop+'%':''}</div>`).join('');
-  return `<div class="card"><div class="wx">${wxIcon(w.code)}
-    <div class="grow"><div class="label">${esc(city)} ${md(day)} 天氣</div>
-    <div class="t">${Math.round(w.tmax)}°<span> / ${Math.round(w.tmin)}°</span></div>
-    <div class="note">${esc(w.summary||wxText(w.code))}${w.pop!=null?`・降雨機率 ${w.pop}%`:''}</div></div></div>
-    ${hrs?`<div class="hours">${hrs}</div>`:''}
-    <div class="note" style="margin-top:8px;font-size:11px">更新於 ${esc(w.updatedAt||'')}</div></div>`;
+  return `<details class="wxd"><summary class="srow"><span class="sico wxi">${wxIcon(w.code)}</span>
+    <div class="grow"><b class="mono">${Math.round(w.tmax)}° / ${Math.round(w.tmin)}°</b> <span class="note">${esc(city)}・${esc(w.summary||wxText(w.code))}${w.pop!=null?`・降雨 ${w.pop}%`:''}</span></div><span class="chev">›</span></summary>
+    ${hrs?`<div class="hours">${hrs}</div>`:''}<div class="note wxu">更新於 ${esc(w.updatedAt||'')}</div></details>`;
 }
-function viewFlash(day,now){
-  const slots=flashSlots(day);
-  const isToday=now.date===day;
-  const before=now.date<day, after=now.date>day;
-  let active=false;
-  const cells=slots.map((t,i)=>{
+function flashState(day,now){
+  const slots=flashSlots(day); const isToday=now.date===day; const after=now.date>day, before=now.date<day;
+  const items=slots.map((t,i)=>{
     const key=`r-${day}-${i+1}`; const mine=myPhoto(key);
-    const opened = after || (isToday&&now.min>=t);
-    if(mine) return `<div class="slot done"><b>${hm(t)}</b>已拍${mine.late?'（遲到）':''}</div>`;
-    if(!opened) return `<div class="slot"><b>??:??</b>第 ${i+1} 次</div>`;
-    if(after) return `<div class="slot"><b>${hm(t)}</b>錯過了</div>`;
-    const left=t+ONTIME_MIN-now.min; active=true;
-    return `<div class="slot open"><b>${hm(t)}</b>${left>0?`還剩 ${left} 分`:'遲到也能拍'}</div>`;
-  }).join('');
-  const openIdx=slots.findIndex((t,i)=>isToday&&now.min>=t&&!myPhoto(`r-${day}-${i+1}`));
-  const total=S.photos.filter(p=>p.kind==='random'&&p.day===day).length;
-  return `<div class="card flashcard${active?'':' idle'}">
-    <div class="row"><div class="grow"><div class="label">隨機拍・每天 3 次</div>
-    <div style="font-weight:700">${active?'現在是拍照時間！全家一起拍':before?'旅途中每天會隨機跳出 3 次，全家同一時間拍':'下一次時間保密，打開網頁時會提醒'}</div></div>
-    ${openIdx>=0?`<button class="btn" style="background:var(--flash-ink);color:var(--flash);border:0" data-shoot="r-${day}-${openIdx+1}">${I.cam}拍</button>`:''}</div>
-    <div class="slots">${cells}</div>
-    ${total?`<div class="note" style="margin-top:8px;color:inherit;opacity:.75">今天全家已拍 ${total} 張</div>`:''}
-  </div>`;
+    const opened=after||(isToday&&now.min>=t);
+    let st='wait';
+    if(mine) st='done'; else if(opened&&after) st='miss'; else if(opened) st='open';
+    return {i,t,key,st,mine,left:t+ONTIME_MIN-now.min,late:mine?.late};
+  });
+  const cur=items.find(x=>x.st==='open');
+  return {items,active:!!cur,cur,before,after,isToday};
+}
+function flashAlert(f,day){
+  const c=f.cur;
+  return `<div class="card flashcard"><div class="row"><div class="grow"><div class="label">隨機拍・第 ${c.i+1} 次</div>
+    <div style="font-weight:700;font-size:17px">現在！全家一起拍一張</div>
+    <div class="note" style="color:inherit;opacity:.8">${c.left>0?`還剩 ${c.left} 分鐘算準時`:'已過準時，遲到也能拍'}</div></div>
+    <button class="btn" style="background:var(--flash-ink);color:var(--flash);border:0;min-height:48px;padding:0 20px;font-size:16px" data-shoot="${esc(c.key)}">${I.cam}拍</button></div></div>`;
+}
+function flashRow(f){
+  const dots=f.items.map(x=>`<span class="dot3 ${x.st}" title="第 ${x.i+1} 次">${x.st==='done'?'✓':x.st==='miss'?'✕':''}</span>`).join('');
+  const done=f.items.filter(x=>x.st==='done').length;
+  const sub=f.before?'每天 3 次・全家同時':(f.after?`已拍 ${done} 張`:`今天已拍 ${done} / 3`);
+  return `<div class="srow"><span class="sico">📷</span><div class="grow"><b>隨機拍</b> <span class="note">${esc(sub)}</span></div><div class="dots3">${dots}</div></div>`;
 }
 
 function viewAlbum(){
@@ -356,7 +354,7 @@ function imgsHtml(x){
 }
 // 去 dest 要看的全部內容：給櫃台的卡片、路線、實拍圖
 function routeBundle(dest,from){
-  return `${showCardHtml(dest.showCard,dest.id)}${dest.approx?`<div class="note">定位點是約略位置。搭 Uber 或導航前，請在地圖上確認上車點和目的地。</div>`:''}${routeCard(dest.transit,from?.name)}${imgsHtml(dest)}`;
+  return `${showCardHtml(dest.showCard,dest.id)}${routeCard(dest.transit,from?.name)}${imgsHtml(dest)}`;
 }
 function sheetRoute(s){
   const prev=prevOf(s);
@@ -380,7 +378,7 @@ function sheetStop(s){
     <div class="card"><div class="label" style="margin-bottom:8px">這站資訊</div>
       <div class="infogrid${s.floorMap?' hasmap':''}"><div class="infomain">
       <dl class="kv">
-        ${(h.open||h.close)?`<dt>營業</dt><dd class="mono">${esc(h.open||'')}–${esc(h.close||'')}</dd>`:''}
+        ${(h.open||h.close)?`<dt>營業</dt><dd class="mono">${h.open&&h.close?`${esc(h.open)}–${esc(h.close)}`:h.open?`${esc(h.open)} 起`:`至 ${esc(h.close)}`}</dd>`:''}
         ${h.lastEntry?`<dt>最後入場</dt><dd class="mono">${esc(h.lastEntry)}</dd>`:''}
         ${(h.closedDays||[]).length?`<dt>公休</dt><dd>週${h.closedDays.map(d=>DOW[d]).join('、')}</dd>`:''}
         ${h.note?`<dt>備註</dt><dd>${esc(h.note)}</dd>`:''}
@@ -406,7 +404,7 @@ function legStep(l){
     <b>${esc(l.from||'')} 上車</b>
     <span class="chip" style="--c:${esc(l.color||'#777')};margin:4px 0"><i>${esc(l.code||'')}</i>${esc(l.line||'')}</span>
     ${l.direction?`<div>往 <b style="display:inline">${esc(l.direction)}</b> 方向</div>`:''}
-    <div class="note">${[l.platform&&`${l.platform} 月台`, l.stops&&`坐 ${l.stops} 站`, l.minutes&&`${l.minutes} 分鐘`, l.car&&`建議車廂：${l.car}`].filter(Boolean).map(esc).join('・')}</div>
+    <div class="note">${[l.platform&&`${l.platform} 月台`, l.car&&`建議車廂：${l.car}`].filter(Boolean).map(esc).join('・')}</div>
     ${l.text?`<div class="note">${esc(l.text)}</div>`:''}
     <b style="margin-top:6px">${esc(l.to||'')} 下車</b>
   </div></div>`;

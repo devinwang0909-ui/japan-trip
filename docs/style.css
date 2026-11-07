@@ -296,3 +296,54 @@ details.arr[open]>summary::after{content:"－"}
 .iv-body img{display:block;width:100%;height:auto;margin:0 auto;cursor:zoom-in}
 .iv-body.zoomed img{width:230%;max-width:none;cursor:zoom-out}
 .iv-hint{color:#fff;opacity:.7;font-size:12px;text-align:center}
+
+/* ===== 介面整理：層級、節奏、視線引導 ===== */
+.label{letter-spacing:.04em}
+main .wrap{gap:12px}
+.dayhead{display:flex;justify-content:space-between;align-items:baseline;margin:6px 2px 10px}
+.dayhead b{font-family:var(--f-display);font-size:18px}
+.dayhead span{font-size:12px;color:var(--muted)}
+/* 資訊列 */
+.strip{padding:0;overflow:hidden}
+.strip>*+*{border-top:1px solid var(--line)}
+.srow{display:flex;align-items:center;gap:12px;padding:11px 14px;list-style:none;cursor:pointer;min-height:52px}
+.srow::-webkit-details-marker{display:none}
+.srow b{font-size:15px}
+.srow .note{font-size:13px}
+.sico{width:30px;height:30px;display:grid;place-items:center;font-size:20px;flex:none}
+.sico svg{width:30px;height:30px}
+.btn.sm{min-height:32px;padding:3px 12px;font-size:13px}
+.chev{color:var(--muted);font-size:20px;line-height:1;flex:none}
+.wxd[open] .chev{transform:rotate(90deg)}
+.wxd .hours{padding:0 14px 6px;margin:0;border-top:none}
+.wxu{padding:0 14px 10px;font-size:11px}
+.dots3{display:flex;gap:6px;flex:none}
+.dot3{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted)}
+.dot3.done{background:var(--go);border-color:var(--go);color:#fff}
+.dot3.miss{border-color:var(--bad);color:var(--bad)}
+.flashcard .row{gap:12px;align-items:center}
+/* 時間軸 */
+.tl{display:flex;flex-direction:column;position:relative;padding-left:22px}
+.tl::before{content:"";position:absolute;left:7px;top:20px;bottom:20px;width:2px;background:var(--line);border-radius:1px}
+.tl .stop{display:block;position:relative;grid-template-columns:none;width:100%}
+.tl .stop::before{content:"";box-sizing:border-box;position:absolute;left:-22px;top:22px;width:16px;height:16px;border-radius:50%;background:var(--paper);border:3px solid var(--ai);z-index:1}
+.tl .stop.visited::before{background:var(--go);border-color:var(--go)}
+.tl .stop .time{display:none}
+.stop .body{padding:10px;gap:4px}
+.stop .ph2{position:relative}
+.stop .ph2 .cov{border-radius:10px}
+.tchip{position:absolute;left:8px;top:8px;background:rgba(14,19,30,.78);color:#fff;font-family:var(--f-mono);font-weight:600;font-size:13px;padding:2px 9px;border-radius:999px}
+.stop .tm{font-family:var(--f-mono);font-weight:600;font-size:13px;color:var(--ai);padding:2px 4px 0}
+.stop h3{font-size:17px;padding:4px 4px 0}
+.stop .ja1{font-size:12px;color:var(--muted);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stop .meta{padding:4px 4px 2px}
+.stop.visited .body{opacity:.55}
+/* 兩站之間的路線 */
+.lg{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:none;border:0;padding:9px 0;min-height:44px;color:var(--ink)}
+.lg .lgchips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.lg .lgend{display:flex;align-items:center;gap:6px;flex:none;font-size:13px;color:var(--muted)}
+.lg.end{display:block;font-size:13px;color:var(--muted);padding:9px 0 2px}
+.chip{font-size:12px}
+.next{padding:16px}
+.next h2{font-size:24px}
+.next .btns.three{grid-template-columns:1.3fr 1fr 1fr}

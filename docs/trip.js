@@ -91,7 +91,7 @@ export const STOPS = [
     transit: {
       summary: '心齋橋搭御堂筋線往梅田，經本町、淀屋橋，到梅田 M16', enter: '心齋橋 M19', exit: '梅田 中央或南側改札', minutes: 15,
       legs: [
-        metro({ from: '心齋橋 M19', to: '梅田 M16', direction: '梅田／新大阪／箕面萱野', stops: 3, minutes: 8, text: '經本町 M18、淀屋橋 M17' }),
+        metro({ from: '心齋橋 M19', to: '梅田 M16', direction: '梅田／新大阪／箕面萱野', stops: 3, minutes: 8 }),
         walk(5, '出中央或南側改札，跟「阪急うめだ本店」往東約 2 分鐘，上 7 樓'),
       ],
     },
@@ -101,7 +101,7 @@ export const STOPS = [
     id: 'd1-alpen', photo: 'assets/p-d1-alpen.jpg', art: 'golf', day: '2026-11-11', order: 50, time: '', name: 'Alpen OSAKA（Golf5）', nameJa: 'アルペン OSAKA ゴルフ5',
     addressJa: '大阪市北区茶屋町1-32 YANMAR FLYING-Y BUILDING', lat: 34.7072, lng: 135.5012, approx: true,
     hours: { open: '10:00', close: '21:00' }, notes: 'Golf5 在 B1、B2。只逛這間，鶴屋已取消。',
-    transit: { summary: '從阪急往茶屋町方向步行', minutes: 10, legs: [walk(8, '阪急大阪梅田站、茶屋町方向，步行約 5～10 分鐘')] },
+    transit: { summary: '從阪急往茶屋町方向步行', minutes: 10, legs: [walk(8)] },
   },
   {
     id: 'd1-mizuno', photo: 'assets/p-d1-mizuno.jpg', art: 'shoe', day: '2026-11-11', order: 60, time: '', name: 'MIZUNO OSAKA CHAYAMACHI', nameJa: 'ミズノ 大阪茶屋町',
@@ -216,7 +216,6 @@ export const STOPS = [
   {
     id: 'd3-kadoma', photo: 'assets/p-d3-kadoma.jpg', art: 'bags', day: '2026-11-13', order: 20, time: '12:00', name: '三井 OUTLET PARK 大阪門真', nameJa: '三井アウトレットパーク 大阪門真',
     addressJa: '大阪府門真市松生町1-11',
-    notes: '中午在商場吃飯，下午購物。約 16:45 離開商場。大鳥大社與門真分處南北兩端，這天交通緩衝要多留。',
     transit: {
       summary: '鳳 → JR 到京橋 → 京阪普通到門真市（不是門真南）', minutes: 105, enter: '鳳站', exit: '京阪 門真市站，步行約 8 分鐘',
       legs: [
