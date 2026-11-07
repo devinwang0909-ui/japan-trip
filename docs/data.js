@@ -57,7 +57,8 @@ async function firebaseData() {
   const base = `t/${TRIP_CODE}`;
   const col = (n) => fs.collection(db, `${base}/${n}`);
   const ref = (n, id) => fs.doc(db, `${base}/${n}/${id}`);
-  const listen = (q, cb, onErr) => fs.onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() })), snap.metadata.fromCache), onErr);
+  // includeMetadataChanges：資料和手機裡存的一樣時，伺服器「確認完成」也要通知，否則網頁會一直以為沒連上
+  const listen = (q, cb, onErr) => fs.onSnapshot(q, { includeMetadataChanges: true }, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() })), snap.metadata.fromCache), onErr);
 
   async function seedIfNeeded() {
     try {

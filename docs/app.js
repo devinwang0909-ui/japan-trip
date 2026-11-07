@@ -956,7 +956,8 @@ async function boot(){
   if(!db){clearTimeout(timer);S.stale=!!S.stops.length;S.ready=true;render();return}
   S.db=db; db.init().catch(()=>{});
   const err=e=>{clearTimeout(timer);S.dbErr=e?.code||'錯誤';console.warn('db error',e);S.stale=true;S.ready=true;render()};
-  db.onStops((list,fromCache)=>{S.stops=list;if(!fromCache){clearTimeout(timer);S.stale=false;S.dbErr=''}S.ready=true;saveCache();render()},err);
+  let lastSig='';
+  db.onStops((list,fromCache)=>{const was=S.stale;if(!fromCache){clearTimeout(timer);S.stale=false;S.dbErr=''}S.ready=true;const sig=JSON.stringify(list);if(sig!==lastSig||was!==S.stale){lastSig=sig;saveCache();render()}},err);
   db.onInfo(i=>{S.info=i;if(i?.title)$('#ttl').textContent=i.title;saveCache();render()},err);
   db.onPhotos(list=>{S.photos=list;saveCache();render()},err);
   db.onTimer(t=>{S.timer=t;timerTick();if(S.tab==='tools'&&!document.activeElement?.matches?.('input'))render()},()=>{});
