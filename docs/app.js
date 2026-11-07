@@ -186,7 +186,7 @@ function viewNext(s,now){
       ${s.time?`<span class="pill ai mono">預計 ${esc(s.time)}</span>`:''}
       ${st?`<span class="pill ${st.kind==='soon'?'warn':st.kind==='off'?'bad':'go'}">${esc(st.text)}</span>`:''}
     </div>
-    ${t?`<div class="note" style="margin-bottom:10px">${esc(t.summary||'')}${t.exit?`・出口：<b>${esc(t.exit)}</b>`:''}</div>`:''}
+    ${t?.exit?`<div class="note" style="margin-bottom:10px">出口：<b>${esc(t.exit)}</b></div>`:''}
     <div class="btns three">
       <a class="btn primary" href="${esc(gmaps(s))}" target="_blank" rel="noopener">${I.map}導航</a>
       <a class="btn" href="${esc(uber(s))}" target="_blank" rel="noopener">${I.car}Uber</a>
@@ -306,7 +306,6 @@ function renderSheet(){
 function routeCard(t,fromName){
   if(!t) return '';
   return `<div class="card"><div class="label" style="margin-bottom:8px">怎麼搭${fromName?`（從 ${esc(fromName)}）`:''}</div>
-      ${t.summary?`<p style="margin:0 0 10px">${esc(t.summary)}</p>`:''}
       ${(t.enter||t.exit)?`<div class="exitbox" style="margin-bottom:12px">${t.enter?`<div><span class="note">上車</span><b>${esc(t.enter)}</b></div>`:''}${t.exit?`<div><span class="note">下車走</span><b>${esc(t.exit)}</b></div>`:''}</div>`:''}
       ${(t.legs||[]).length?`<div class="route">${t.legs.map(legStep).join('')}</div>`:''}
       ${(t.steps||[]).length?`<ol style="margin:4px 0 0;padding-left:20px">${t.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:''}
@@ -356,6 +355,11 @@ function imgsHtml(x){
 function routeBundle(dest,from){
   return `${showCardHtml(dest.showCard,dest.id)}${routeCard(dest.transit,from?.name)}${imgsHtml(dest)}`;
 }
+function bullets(text){
+  const items=String(text||'').split(/\n|。/).map(x=>x.trim()).filter(Boolean);
+  if(!items.length) return '';
+  return `<ul class="bul">${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+}
 function sheetRoute(s){
   const prev=prevOf(s);
   return `<div class="grab"><div class="wrap"><div class="head"><div class="grow"><div class="label">${md(s.day)}${s.time?'・'+esc(s.time):''}</div><h2><span class="em" aria-hidden="true">${emojiOf(guessArt(s))}</span>去 ${esc(s.name)}</h2>${prev?`<div class="note">從 ${esc(prev.name)}</div>`:''}</div><button class="x" data-act="close" aria-label="關閉">${I.x}</button></div></div></div>
@@ -387,7 +391,7 @@ function sheetStop(s){
         ${s.address||s.addressJa?`<dt>地址</dt><dd><a href="${esc(gplace(s))}" target="_blank" rel="noopener">${esc(s.addressJa||s.address)}</a></dd>`:''}
       </dl>
       ${!(h.open||h.close||s.price||s.address||s.addressJa)?'<div class="note">還沒填營業時間或門票。</div>':''}
-      ${s.notes?`<p style="margin:10px 0 0;white-space:pre-wrap">${esc(s.notes)}</p>`:''}
+      ${bullets(s.notes)}
       </div>${s.floorMap?`<button class="mapthumb" data-imgview="${esc(s.id)}" aria-label="放大樓層圖"><img src="${esc(s.floorMap.src)}" alt="" loading="lazy"><span>樓層圖・點擊放大</span></button>`:''}</div>
     </div>
     ${s.transit||s.showCard?routeBundle(s,prev):''}

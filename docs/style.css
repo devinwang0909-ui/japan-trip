@@ -347,3 +347,7 @@ main .wrap{gap:12px}
 .next{padding:16px}
 .next h2{font-size:24px}
 .next .btns.three{grid-template-columns:1.3fr 1fr 1fr}
+
+.bul{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.bul li{position:relative;padding-left:16px;line-height:1.5}
+.bul li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--ai)}
