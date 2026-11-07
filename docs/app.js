@@ -745,7 +745,7 @@ async function onShot(file){
 function askName(change){
   if($('#nameModal')) return;
   const m=document.createElement('div');m.id='nameModal';m.className='scrim';m.style.zIndex=70;
-  m.innerHTML=`<div class="sheet" style="padding:20px 16px calc(24px + env(safe-area-inset-bottom,0px))"><div class="wrap"><h2>${change?'改名字':'你是誰？'}</h2><p class="note" style="margin:0">相簿會用這個名字標示是誰拍的。每人用同一個名字，換手機也不會重拍。</p><form id="nameForm"><div class="f"><label for="nm">名字</label><input id="nm" required maxlength="12" value="${esc(S.uid||'')}" placeholder="例如：爸爸、媽媽、Devin" autocomplete="off"></div><button class="btn primary" type="submit">確定</button></form></div></div>`;
+  m.innerHTML=`<div class="sheet" style="padding:20px 16px calc(24px + env(safe-area-inset-bottom,0px))"><div class="wrap"><h2>${change?'改名字':'你是誰？'}</h2><p class="note" style="margin:0">相簿會用這個名字標示是誰拍的。每人用同一個名字，換手機也不會重拍。</p><form id="nameForm"><div class="f"><label for="nm">名字</label><input id="nm" required maxlength="12" value="${esc(S.uid||'')}" placeholder="例如：爸爸、媽媽" autocomplete="off"></div><button class="btn primary" type="submit">確定</button></form></div></div>`;
   document.body.appendChild(m);
   $('#nm').focus();
   $('#nameForm').addEventListener('submit',ev=>{ev.preventDefault();const v=$('#nm').value.trim();if(!v)return;S.uid=v;ls.set('me',v);m.remove();render()});
