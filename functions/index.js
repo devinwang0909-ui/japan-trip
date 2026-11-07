@@ -40,7 +40,6 @@ async function claimSend(key) {
 
 exports.tick = onSchedule({ schedule: 'every 1 minutes', timeZone: 'Asia/Tokyo', region: 'asia-northeast1', retryCount: 0 }, async () => {
   const now = jst();
-  if (!DAYS.includes(now.date) || now.min < 6 * 60) return;
   const tokens = await db.collection(`${base}/tokens`).get();
   if (tokens.empty) return;
 
@@ -57,6 +56,7 @@ exports.tick = onSchedule({ schedule: 'every 1 minutes', timeZone: 'Asia/Tokyo',
   }
 
   // 2) 隨機拍（每人時間不同；拍了照或按「我知道了」就停）
+  if (!DAYS.includes(now.date) || now.min < 6 * 60) return; // 隨機拍只在行程日，集合計時隨時可用
   const byName = new Map();
   tokens.docs.forEach((d) => { const n = d.data().name; if (n) byName.set(n, [...(byName.get(n) || []), d]); });
   for (const due of dueRandom(now, [...byName.keys()])) {
