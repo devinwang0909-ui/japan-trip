@@ -379,6 +379,8 @@ function viewAlbum(){
   });
   return out.join('');
 }
+// 只有名字輸入 Katherine（英文、不分大小寫）才算；Katherine 專屬功能都用這個判斷
+const isKatherine=name=>String(name??S.uid??'').trim().toLowerCase()==='katherine';
 const who = uid => uid||'家人';
 function thumb(p){return `<button class="ph" data-view="${esc(p.id)}"><img loading="lazy" src="${esc(p.thumb||'')}" alt="${esc(who(p.uid))} 拍的照片"><span>${esc(who(p.uid))}</span>${p.late?'<span class="late">遲到</span>':''}${p.caption?'<span class="cap">💬</span>':''}</button>`}
 

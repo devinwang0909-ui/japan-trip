@@ -32,4 +32,6 @@ function dueRandom(now, names) {
   }
   return out;
 }
-module.exports = { DAYS, ONTIME_MIN, flashSlots, photoKeyFor, jst, dueRandom };
+// 只有名字輸入 Katherine（英文、不分大小寫）才算
+const isKatherine = (name) => String(name == null ? '' : name).trim().toLowerCase() === 'katherine';
+module.exports = { isKatherine, DAYS, ONTIME_MIN, flashSlots, photoKeyFor, jst, dueRandom };
