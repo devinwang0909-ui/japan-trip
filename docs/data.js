@@ -9,7 +9,7 @@ const strip = (o) => JSON.parse(JSON.stringify(o, (k, v) => (v === undefined ? n
 
 /* ---------- 只存在這支手機 ---------- */
 function localData() {
-  const subs = { stops: [], info: [], photos: [] };
+  const subs = { stops: [], info: [], photos: [], timer: [] };
   let stops = lsGet('L_stops', null);
   if (!stops || (lsGet('L_ver', 0) < SEED_VERSION)) {
     const old = new Map((stops || []).map((s) => [s.id, s]));
@@ -18,6 +18,7 @@ function localData() {
     lsSet('L_stops', stops); lsSet('L_ver', SEED_VERSION);
   }
   const photos = lsGet('L_photos', []);
+  let timer = lsGet('L_timer', null);
   const fulls = new Map();
   const emit = (k, v) => subs[k].forEach((f) => f(v));
   return {
@@ -26,6 +27,8 @@ function localData() {
     onStops(cb) { subs.stops.push(cb); cb(stops); },
     onInfo(cb) { subs.info.push(cb); cb(INFO); },
     onPhotos(cb) { subs.photos.push(cb); cb(photos); },
+    onTimer(cb) { subs.timer.push(cb); cb(timer); },
+    async setTimer(t) { timer = t; lsSet('L_timer', t); emit('timer', t); },
     newId() { return 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); },
     async saveStop(id, data) {
       const i = stops.findIndex((s) => s.id === id);
@@ -75,6 +78,8 @@ async function firebaseData() {
     onStops(cb, err) { listen(col('stops'), cb, err); },
     onInfo(cb, err) { fs.onSnapshot(ref('meta', 'info'), (s) => cb(s.exists() ? s.data() : INFO), err); },
     onPhotos(cb, err) { listen(col('photos'), cb, err); },
+    onTimer(cb, err) { fs.onSnapshot(ref('meta', 'timer'), (s) => cb(s.exists() ? s.data() : null), err); },
+    async setTimer(t) { await fs.setDoc(ref('meta', 'timer'), strip(t)); },
     newId() { return fs.doc(col('stops')).id; },
     async saveStop(id, data) { await fs.setDoc(ref('stops', id), strip(data), { merge: true }); },
     async deleteStop(id) { await fs.deleteDoc(ref('stops', id)); },

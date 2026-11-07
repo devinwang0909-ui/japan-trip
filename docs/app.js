@@ -7,7 +7,7 @@ const DAYS = ['2026-11-11','2026-11-12','2026-11-13','2026-11-14'];
 const DOW = ['日','一','二','三','四','五','六'];
 const ONTIME_MIN = 15;              // 隨機拍：開放後幾分鐘內算準時
 const S = {tab:'plan', day:null, stops:[], info:null, weather:{}, photos:[], uid:null,
-  canWrite:true, db:null, ready:false, stale:false, sheet:null, pending:null, full:{}};
+  canWrite:true, db:null, ready:false, stale:false, sheet:null, pending:null, full:{}, timer:null};
 
 /* ---------- utils ---------- */
 const $ = s => document.querySelector(s);
@@ -26,8 +26,8 @@ function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.im
 function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* 隨機拍時間：同一天全家相同；08:30–21:30 之間，彼此至少間隔 100 分鐘 */
-function flashSlots(date){
-  const r=rng(hash(date+'|flash-v1'));let out=[];
+function flashSlots(date,who){
+  const r=rng(hash(date+'|flash-v2|'+(who??S.uid??'guest')));let out=[];
   for(let tries=0;tries<500&&out.length<3;tries++){
     const t=510+Math.floor(r()*(1290-510));
     if(out.every(x=>Math.abs(x-t)>=100)) out.push(t);
@@ -105,12 +105,14 @@ function renderDays(){
   const now=jst();
   $('#days').innerHTML=DAYS.map((d,i)=>`<button class="day${d===now.date?' today':''}" data-day="${d}" aria-pressed="${d===S.day}"><b>${md(d)}</b><small>Day ${i+1}・${DOW[dowOf(d)]}</small></button>`).join('');
   $('#days').hidden = S.tab!=='plan';
+  $('#ttl').textContent = S.tab==='plan'?(S.info?.title||'大阪京都家族旅'):({timer:'集合計時',album:'旅行相簿',sos:'緊急資訊'}[S.tab]||'');
 }
 function render(){
   renderDays();
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.setAttribute('aria-current',t.dataset.tab===S.tab?'page':'false'));
   const v=$('#view');
   if(S.tab==='plan') v.innerHTML=viewPlan();
+  else if(S.tab==='timer') v.innerHTML=viewTimer();
   else if(S.tab==='album') v.innerHTML=viewAlbum();
   else v.innerHTML=viewSOS();
   if(S.sheet) renderSheet();
@@ -218,16 +220,94 @@ function flashState(day,now){
 function flashAlert(f,day){
   const c=f.cur;
   return `<div class="card flashcard"><div class="row"><div class="grow"><div class="label">隨機拍・第 ${c.i+1} 次</div>
-    <div style="font-weight:700;font-size:17px">現在！全家一起拍一張</div>
+    <div style="font-weight:700;font-size:17px">現在！拍一張</div>
     <div class="note" style="color:inherit;opacity:.8">${c.left>0?`還剩 ${c.left} 分鐘算準時`:'已過準時，遲到也能拍'}</div></div>
     <button class="btn" style="background:var(--flash-ink);color:var(--flash);border:0;min-height:48px;padding:0 20px;font-size:16px" data-shoot="${esc(c.key)}">${I.cam}拍</button></div></div>`;
 }
 function flashRow(f){
   const dots=f.items.map(x=>`<span class="dot3 ${x.st}" title="第 ${x.i+1} 次">${x.st==='done'?'✓':x.st==='miss'?'✕':''}</span>`).join('');
   const done=f.items.filter(x=>x.st==='done').length;
-  const sub=f.before?'每天 3 次・全家同時':(f.after?`已拍 ${done} 張`:`今天已拍 ${done} / 3`);
+  const sub=f.before?'每天 3 次，每人時間不同':(f.after?`已拍 ${done} 張`:`今天已拍 ${done} / 3`);
   return `<div class="srow"><span class="sico">📷</span><div class="grow"><b>隨機拍</b> <span class="note">${esc(sub)}</span></div><div class="dots3">${dots}</div></div>`;
 }
+
+
+/* ---------- 集合計時 ---------- */
+const RING=2*Math.PI*88;
+const fmtT=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+function timerLeft(){return S.timer&&!S.timer.cancelled?S.timer.endsAt-Date.now():null}
+function viewTimer(){
+  const left=timerLeft(); const t=S.timer;
+  if(left!=null&&left>0){
+    const total=(t.minutes||1)*60000;
+    return `<div class="tmr card">
+      <div class="label">${esc(t.by||'有人')} 設定的集合倒數${t.label?`・${esc(t.label)}`:''}</div>
+      <div class="ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="88" class="rbg"/><circle id="tmrArc" cx="100" cy="100" r="88" class="rfg" stroke-dasharray="${RING}" stroke-dashoffset="${RING*(1-Math.max(0,left)/total)}"/></svg><div class="rnum mono" id="tmrNum">${fmtT(left)}</div></div>
+      <div class="note" style="text-align:center">時間到時，全家手機會響。<br>請保持網頁開著、螢幕不要鎖定。</div>
+      <div class="btns"><button class="btn" data-tmr="plus">+5 分鐘</button><button class="btn danger" data-tmr="cancel">取消</button></div></div>`;
+  }
+  const mins=[10,15,20,30,45,60];
+  return `<div class="tmr card">
+      <div class="label">各自行動，時間到集合</div>
+      <div class="presets">${mins.map(m=>`<button class="pre${m===(S.tmrMin||20)?' on':''}" data-tmrpre="${m}">${m}<small>分</small></button>`).join('')}</div>
+      <div class="f"><label for="tmrCustom">自訂分鐘</label><input id="tmrCustom" type="number" inputmode="numeric" min="1" max="240" value="${S.tmrMin||20}"></div>
+      <div class="f"><label for="tmrLabel">集合地點（選填）</label><input id="tmrLabel" maxlength="20" placeholder="例如：飯店大廳、阪急門口" value="${esc(S.tmrLabel||'')}"></div>
+      <button class="btn primary big" data-tmr="start">開始計時</button>
+      <div class="note">按下後，全家手機都會開始倒數。時間到會響鈴和震動，請保持網頁開著、螢幕不要鎖定。</div>
+    </div>`;
+}
+function setTimerObj(minutes,label){
+  const t={id:'t'+Date.now(),endsAt:Date.now()+minutes*60000,minutes,label:label||'',by:S.uid||'有人',createdAt:Date.now()};
+  return S.db.setTimer(t);
+}
+async function timerAction(kind){
+  if(!S.db){toast('還在載入，請稍後再試');return}
+  unlockAudio();
+  try{
+    if(kind==='start'){
+      const m=Math.max(1,Math.min(240,Math.round(+($('#tmrCustom')?.value||S.tmrMin||20))));
+      S.tmrMin=m;S.tmrLabel=$('#tmrLabel')?.value.trim()||'';
+      try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission()}catch{}
+      await setTimerObj(m,S.tmrLabel);toast(`已開始，${m} 分鐘後集合`);
+    }else if(kind==='plus'&&S.timer){await S.db.setTimer({...S.timer,endsAt:S.timer.endsAt+5*60000,minutes:(S.timer.minutes||0)+5})}
+    else if(kind==='cancel'){await S.db.setTimer({...(S.timer||{}),cancelled:true});toast('已取消')}
+  }catch(e){toast('操作失敗，請檢查網路')}
+}
+let audioCtx=null,beepT=null,wake=null;
+function unlockAudio(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}catch{}}
+document.addEventListener('pointerdown',unlockAudio,{once:false,passive:true});
+function beepOnce(){
+  if(!audioCtx) return;
+  const t0=audioCtx.currentTime;
+  [0,.22,.44].forEach(d=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=880;g.gain.setValueAtTime(0,t0+d);g.gain.linearRampToValueAtTime(.5,t0+d+.02);g.gain.linearRampToValueAtTime(0,t0+d+.18);o.connect(g).connect(audioCtx.destination);o.start(t0+d);o.stop(t0+d+.2)});
+}
+function startRinging(){stopRinging();beepOnce();vib([400,150,400,150,400]);beepT=setInterval(()=>{beepOnce();vib([400,150,400])},1800)}
+function stopRinging(){clearInterval(beepT);beepT=null}
+function showTimerDone(t,late){
+  if($('#tmrDone')) return;
+  const m=document.createElement('div');m.id='tmrDone';m.className='flashmodal tmrdone';m.setAttribute('role','alertdialog');
+  m.innerHTML=`<div style="font-size:64px">⏰</div><h2>集合時間到！</h2><div>${t.label?`集合地點：<b>${esc(t.label)}</b><br>`:''}${late>60?`已經超過 ${Math.round(late/60)} 分鐘了`:'大家回來囉'}</div><button class="btn" style="background:var(--flash-ink);color:var(--flash);border:0;font-size:18px;padding:14px 32px" data-act="tmr-ok">知道了</button>`;
+  document.body.appendChild(m);
+  startRinging();
+  try{if('Notification' in window&&Notification.permission==='granted'&&document.hidden)new Notification('集合時間到！',{body:t.label||'大家回來囉'})}catch{}
+}
+function timerTick(){
+  const left=timerLeft();
+  if(S.timer&&!S.timer.cancelled&&left!=null){
+    if(left<=0){
+      const seen=ls.get('tmrSeen',{});
+      if(!seen[S.timer.id]&&(-left)<30*60000){seen[S.timer.id]=1;ls.set('tmrSeen',seen);showTimerDone(S.timer,-left/1000)}
+    }
+    if(S.tab==='timer'){
+      const n=$('#tmrNum');
+      if(left>0&&n){n.textContent=fmtT(left);const a=$('#tmrArc');if(a)a.style.strokeDashoffset=RING*(1-left/((S.timer.minutes||1)*60000))}
+      else if(left<=0&&n) render();
+    }
+    if(left>0&&!wake&&!document.hidden&&navigator.wakeLock){navigator.wakeLock.request('screen').then(w=>{wake=w;w.addEventListener('release',()=>{wake=null})}).catch(()=>{})}
+  }
+}
+setInterval(timerTick,500);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)timerTick()});
 
 function viewAlbum(){
   const out=[];
@@ -242,7 +322,7 @@ function viewAlbum(){
     sorted(d).forEach(s=>{const g=ps.filter(p=>p.key==='s-'+s.id);if(g.length)groups.push([s.name,g])});
     const orphan=ps.filter(p=>p.kind==='spot'&&!S.stops.some(s=>'s-'+s.id===p.key));
     if(orphan.length) groups.push(['其他景點',orphan]);
-    flashSlots(d).forEach((t,k)=>{const g=ps.filter(p=>p.key===`r-${d}-${k+1}`);if(g.length)groups.push([`隨機拍 ${hm(t)}`,g])});
+    [1,2,3].forEach(n=>{const g=ps.filter(p=>p.key===`r-${d}-${n}`);if(g.length)groups.push([`隨機拍 第 ${n} 次`,g])});
     out.push(`<section class="album-day"><h2>Day ${i+1}<small>${md(d)}（${DOW[dowOf(d)]}）</small></h2>${groups.map(([t,g])=>`<div class="astop"><div class="t">${esc(t)}</div><div class="pgrid">${g.map(thumb).join('')}</div></div>`).join('')}</section>`);
   });
   return out.join('');
@@ -269,10 +349,9 @@ function viewSOS(){
   </div>
   ${hotelCards}
   <div class="card"><div class="label">緊急電話（在日本用手機直撥）</div>
-    ${ph('駐日代表處 緊急聯絡（東京）','080-1009-7179','被捕、重大犯罪受害、緊急就醫等危及安全時使用')}
-    ${ph('駐日代表處 緊急聯絡（東京）備用','080-1009-7436','')}
-    ${ph('駐大阪辦事處 緊急聯絡','090-8794-4568','京都、大阪、兵庫等關西地區')}
-    ${ph('駐日代表處 上班時間','03-3280-7811','護照遺失、一般領務')}
+    ${ph('駐大阪辦事處 緊急聯絡','090-8794-4568','你們這趟的轄區（大阪、京都）。被捕、重大犯罪受害、緊急就醫')}
+    ${ph('駐大阪辦事處 上班時間','06-6227-8623','護照遺失、一般領務')}
+    ${ph('駐日代表處（東京）緊急聯絡','080-1009-7179','備用，東京總館')}
     ${ph('日本觀光局訪日旅客熱線','050-3816-2787','24 小時，有中文、英文')}
     ${ph('急病諮詢（要不要叫救護車）','#7119','東京、大阪等地適用')}
   </div>
@@ -558,11 +637,14 @@ async function exportAlbum(onlyMine){
 
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-day],[data-tab],[data-act],[data-open],[data-shoot],[data-visit],[data-edit],[data-del],[data-view],[data-copy],[data-rename],[data-paper],[data-route],[data-imgview]');
+  const t=e.target.closest('[data-day],[data-tab],[data-act],[data-open],[data-shoot],[data-visit],[data-edit],[data-del],[data-view],[data-copy],[data-rename],[data-paper],[data-route],[data-imgview],[data-tmr],[data-tmrpre]');
   if(!t) return;
   const d=t.dataset;
   if(d.day){S.day=d.day;ls.set('day',{d:d.day,at:jst().date});render();window.scrollTo({top:0})}
   else if(d.tab){S.tab=d.tab;render();window.scrollTo({top:0})}
+  else if(d.tmr){timerAction(d.tmr)}
+  else if(d.tmrpre){S.tmrMin=+d.tmrpre;const c=$('#tmrCustom');if(c)c.value=d.tmrpre;document.querySelectorAll('.pre').forEach(b=>b.classList.toggle('on',b.dataset.tmrpre===d.tmrpre))}
+  else if(d.act==='tmr-ok'){stopRinging();$('#tmrDone')?.remove();if(S.tab==='timer')render()}
   else if(d.imgview){const m=S.stops.find(x=>x.id===d.imgview)?.floorMap;if(m)openImgView(m.src,m.caption)}
   else if(d.route){e.preventDefault();openSheet({type:'route',id:d.route})}
   else if(d.open){e.preventDefault();openSheet({type:'stop',id:d.open})}
@@ -601,7 +683,7 @@ function tick(){
       if(now.min>=t&&now.min<t+ONTIME_MIN&&!myPhoto(key)&&!seen[key]&&!$('#flashModal')){
         seen[key]=1;ls.set('flashSeen',seen);vib([250,120,250,120,400]);
         const m=document.createElement('div');m.id='flashModal';m.className='flashmodal';m.setAttribute('role','alertdialog');
-        m.innerHTML=`<div style="width:56px;height:56px">${I.bolt}</div><h2>隨機拍時間到！</h2><div>全家現在一起拍一張，${ONTIME_MIN} 分鐘內算準時</div><div class="mono">${hm(t)}</div><button class="btn" style="background:var(--flash-ink);color:var(--flash);border:0;font-size:18px;padding:14px 28px" data-act="flash-go" data-key="${key}">${I.cam}現在拍</button><button class="btn ghost" style="color:inherit;border-color:currentColor" data-act="flash-later">等一下</button>`;
+        m.innerHTML=`<div style="width:56px;height:56px">${I.bolt}</div><h2>隨機拍時間到！</h2><div>現在拍一張！${ONTIME_MIN} 分鐘內算準時</div><div class="mono">${hm(t)}</div><button class="btn" style="background:var(--flash-ink);color:var(--flash);border:0;font-size:18px;padding:14px 28px" data-act="flash-go" data-key="${key}">${I.cam}現在拍</button><button class="btn ghost" style="color:inherit;border-color:currentColor" data-act="flash-later">等一下</button>`;
         document.body.appendChild(m);
       }
     });
@@ -655,6 +737,7 @@ async function boot(){
   db.onStops((list,fromCache)=>{S.stops=list;if(!fromCache){clearTimeout(timer);S.stale=false}S.ready=true;saveCache();render()},err);
   db.onInfo(i=>{S.info=i;if(i?.title)$('#ttl').textContent=i.title;saveCache();render()},err);
   db.onPhotos(list=>{S.photos=list;saveCache();render()},err);
+  db.onTimer(t=>{S.timer=t;timerTick();if(S.tab==='timer'&&!document.activeElement?.matches?.('input'))render()},()=>{});
   if(!S.uid) setTimeout(()=>{if(!S.uid)askName()},600);
 }
 boot();
