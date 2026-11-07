@@ -7,7 +7,7 @@ const DAYS = ['2026-11-11','2026-11-12','2026-11-13','2026-11-14'];
 const DOW = ['日','一','二','三','四','五','六'];
 const ONTIME_MIN = 15;              // 隨機拍：開放後幾分鐘內算準時
 const S = {tab:'plan', day:null, stops:[], info:null, weather:{}, photos:[], uid:null,
-  canWrite:true, db:null, ready:false, stale:false, sheet:null, pending:null, full:{}, timer:null, fx:{rate:0.21,at:'',live:false,jpy:'',twd:''}};
+  canWrite:true, db:null, ready:false, stale:false, sheet:null, pending:null, full:{}, timer:null, toolOpen:{fx:false,timer:false}, fx:{rate:0.21,at:'',live:false,jpy:'',twd:''}};
 
 /* ---------- utils ---------- */
 const $ = s => document.querySelector(s);
@@ -113,7 +113,7 @@ function render(){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.setAttribute('aria-current',t.dataset.tab===S.tab?'page':'false'));
   const v=$('#view');
   if(S.tab==='plan') v.innerHTML=viewPlan();
-  else if(S.tab==='tools') v.innerHTML=viewFx()+viewTimer();
+  else if(S.tab==='tools') v.innerHTML=viewTools();
   else if(S.tab==='album') v.innerHTML=viewAlbum();
   else v.innerHTML=viewSOS();
   if(S.sheet) renderSheet();
@@ -257,10 +257,24 @@ function timerLeft(){return S.timer&&!S.timer.cancelled?S.timer.endsAt-Date.now(
 /* ---------- 匯率計算 ---------- */
 const FX_DEFAULT=0.21;
 const fxFmt=(n,d=0)=>Number.isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d}):'';
+/* ---------- 工具頁：可摺疊的區塊 ---------- */
+function toolSection(id,icon,title,sum,body){
+  const open=!!S.toolOpen[id];
+  return `<details class="tool card" data-tool="${id}"${open?' open':''}><summary><span class="tico">${icon}</span><span class="tt"><b>${title}</b><small id="sum-${id}">${sum}</small></span><span class="chev">›</span></summary><div class="tbody">${body}</div></details>`;
+}
+function timerSummary(){
+  const left=timerLeft();
+  return left!=null&&left>0?`倒數 ${fmtT(left)}${S.timer?.label?`・${esc(S.timer.label)}`:''}`:'各自行動，時間到全家一起響';
+}
+function viewTools(){
+  return toolSection('fx','💴','匯率計算',`1 日圓 = ${esc(String(S.fx.rate))} 台幣`,viewFx())
+    +toolSection('timer','⏱️','集合計時',timerSummary(),viewTimer());
+}
+document.addEventListener('toggle',e=>{const d=e.target;if(d?.matches?.('details.tool'))S.toolOpen[d.dataset.tool]=d.open},true);
 function viewFx(){
   const f=S.fx;
   const note=f.live?`即時匯率，更新於 ${esc(f.at||'')}`:'離線預設匯率，連網後自動更新，也可以手動改';
-  return `<div class="card fx"><div class="label">匯率計算・日圓 ↔ 台幣</div>
+  return `<div class="card fx">
     <div class="fxrow">
       <label class="fxbox"><span>日圓 JPY</span><div><b>¥</b><input id="fxJpy" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(f.jpy)}"></div></label>
       <label class="fxbox"><span>台幣 TWD</span><div><b>NT$</b><input id="fxTwd" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(f.twd)}"></div></label>
@@ -350,6 +364,7 @@ function timerTick(){
       if(!seen[S.timer.id]&&(-left)<30*60000){seen[S.timer.id]=1;ls.set('tmrSeen',seen);showTimerDone(S.timer,-left/1000)}
     }
     if(S.tab==='tools'){
+      const sm=$('#sum-timer'); if(sm) sm.textContent=left>0?`倒數 ${fmtT(left)}${S.timer?.label?`・${S.timer.label}`:''}`:'各自行動，時間到全家一起響';
       const n=$('#tmrNum');
       if(left>0&&n){n.textContent=fmtT(left);const a=$('#tmrArc');if(a)a.style.strokeDashoffset=RING*(1-left/((S.timer.minutes||1)*60000))}
       else if(left<=0&&n) render();
