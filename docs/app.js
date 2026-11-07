@@ -108,6 +108,7 @@ function renderDays(){
   $('#ttl').textContent = S.tab==='plan'?(S.info?.title||'大阪京都家族旅'):({timer:'集合計時',album:'旅行相簿',sos:'緊急資訊'}[S.tab]||'');
 }
 function render(){
+  syncLens();
   renderDays();
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.setAttribute('aria-current',t.dataset.tab===S.tab?'page':'false'));
   const v=$('#view');
@@ -653,6 +654,53 @@ async function exportAlbum(onlyMine){
 }
 
 /* ---------- events ---------- */
+/* ---------- 液態玻璃底部欄 ---------- */
+const TAB_ORDER=['plan','timer','__add','album','sos'];
+let pillDrag=null,lensIdx=0;
+function pillEls(){const pill=$('#pill');return pill?{pill,lens:$('#lens'),tabs:[...pill.querySelectorAll('.tab')]}:null}
+function lensX(i){const e=pillEls();return e?i*(e.pill.clientWidth-10)/5:0}
+function syncLens(){
+  const e=pillEls(); if(!e) return;
+  lensIdx=Math.max(0,TAB_ORDER.indexOf(S.tab));
+  e.lens.style.setProperty('--x',lensX(lensIdx)+'px');
+}
+function tabAt(clientX){
+  const {pill}=pillEls(); const r=pill.getBoundingClientRect();
+  return Math.max(0,Math.min(4,Math.floor((clientX-r.left-5)/((r.width-10)/5))));
+}
+function initPill(){
+  const e=pillEls(); if(!e) return; const {pill,lens,tabs}=e;
+  let synth=false;
+  pill.addEventListener('click',ev=>{ if(!synth&&ev.detail>0){ev.stopPropagation();ev.preventDefault()} },true);
+  const hot=i=>tabs.forEach((t,k)=>t.classList.toggle('hot',k===i));
+  const follow=x=>{const r=pill.getBoundingClientRect();const w=(r.width-10)/5;const p=Math.max(0,Math.min(4*w,x-r.left-5-w/2));lens.style.setProperty('--x',p+'px');return tabAt(x)};
+  pill.addEventListener('pointerdown',ev=>{
+    if(ev.button>0) return;
+    try{pill.setPointerCapture(ev.pointerId)}catch{}
+    pillDrag={t:Date.now(),idx:tabAt(ev.clientX)};
+    lens.classList.add('drag','up'); pillDrag.idx=follow(ev.clientX); hot(pillDrag.idx); vib(8);
+  });
+  pill.addEventListener('pointermove',ev=>{
+    if(!pillDrag) return; const i=follow(ev.clientX); if(i!==pillDrag.idx){pillDrag.idx=i;hot(i);vib(6)}
+  });
+  const end=(ev,cancel)=>{
+    if(!pillDrag) return; const d=pillDrag; pillDrag=null;
+    const idx=cancel?-1:tabAt(ev.clientX);
+    const settle=()=>{
+      lens.classList.remove('up'); hot(-1);
+      const target=idx>=0&&TAB_ORDER[idx]!=='__add'?idx:lensIdx;
+      lens.style.setProperty('--x',lensX(target)+'px');
+      setTimeout(()=>lens.classList.remove('drag'),60);
+      if(idx>=0){synth=true;tabs[idx].dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));synth=false}
+    };
+    const wait=Math.max(0,170-(Date.now()-d.t));  // 輕點也會先放大再縮回
+    setTimeout(settle,wait);
+  };
+  pill.addEventListener('pointerup',ev=>end(ev,false));
+  pill.addEventListener('pointercancel',ev=>end(ev,true));
+  window.addEventListener('resize',syncLens);
+  syncLens();
+}
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-day],[data-tab],[data-act],[data-open],[data-shoot],[data-visit],[data-edit],[data-del],[data-view],[data-copy],[data-rename],[data-paper],[data-route],[data-imgview],[data-tmr],[data-tmrpre]');
   if(!t) return;
@@ -742,7 +790,7 @@ function loadCache(){
 }
 let cacheT; function saveCache(){clearTimeout(cacheT);cacheT=setTimeout(()=>{if(!ls.set('cache2',{stops:S.stops,info:S.info,photos:S.photos}))ls.set('cache2',{stops:S.stops,info:S.info,photos:[]})},500)}
 async function boot(){
-  initDay(); S.uid=ls.get('me',null); loadCache(); render(); tick();
+  initPill(); initDay(); S.uid=ls.get('me',null); loadCache(); render(); tick();
   setInterval(tick,15000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();loadWeather()}});
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});

@@ -434,3 +434,31 @@ body{font-size:16px;line-height:1.5;letter-spacing:-.005em;-webkit-font-smoothin
 .phone .n{font-size:22px;font-weight:600;letter-spacing:.01em}
 .phone .btn{min-height:36px;padding:2px 16px}
 .card .f input,.card .f select,.card .f textarea{background:var(--fill)}
+
+/* ===== 液態玻璃底部欄：浮動膠囊，按下或滑動時選取圈放大，放開縮回 ===== */
+.tabs{background:transparent;border:0;-webkit-backdrop-filter:none;backdrop-filter:none;pointer-events:none;padding:0 max(14px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-right,0px))}
+.tabs .pill{pointer-events:auto;position:relative;max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);padding:5px;border-radius:999px;touch-action:none;-webkit-user-select:none;user-select:none;
+  background:color-mix(in srgb,var(--card) 52%,transparent);
+  -webkit-backdrop-filter:blur(26px) saturate(190%) brightness(1.04);backdrop-filter:blur(26px) saturate(190%) brightness(1.04);
+  box-shadow:inset 0 0 0 .6px rgba(255,255,255,.55),inset 0 1.5px 2px rgba(255,255,255,.5),inset 0 -1px 2px rgba(0,0,0,.06),0 10px 32px rgba(0,0,0,.16),0 2px 6px rgba(0,0,0,.08)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tabs .pill{background:color-mix(in srgb,#2c2c2e 55%,transparent);box-shadow:inset 0 0 0 .6px rgba(255,255,255,.22),inset 0 1.5px 2px rgba(255,255,255,.14),0 12px 34px rgba(0,0,0,.5)}}
+:root[data-theme="dark"] .tabs .pill{background:color-mix(in srgb,#2c2c2e 55%,transparent);box-shadow:inset 0 0 0 .6px rgba(255,255,255,.22),inset 0 1.5px 2px rgba(255,255,255,.14),0 12px 34px rgba(0,0,0,.5)}
+.pill .tab{position:relative;z-index:2;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:54px;padding:0;border-radius:999px;color:var(--ink);font-size:10px;font-weight:500;letter-spacing:0;-webkit-tap-highlight-color:transparent;transition:color .2s}
+.pill .tab svg{width:25px;height:25px;stroke-width:1.8;transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+.pill .tab span{line-height:1}
+.pill .tab.add{color:var(--ink)}
+.pill .tab[aria-current="page"]{color:var(--ai);font-weight:600}
+.pill .tab.hot svg{transform:scale(1.28)}
+.pill .tab:active{transform:none;opacity:1}
+/* 選取圈：平時是淡灰膠囊，按下放大成玻璃透鏡 */
+.pill .lens{position:absolute;z-index:1;left:5px;top:5px;bottom:5px;width:calc((100% - 10px)/5);border-radius:999px;pointer-events:none;
+  background:var(--fill);translate:var(--x,0px) 0;scale:var(--s,1);
+  transition:translate .5s cubic-bezier(.34,1.4,.64,1),scale .45s cubic-bezier(.34,1.56,.64,1),background .25s,box-shadow .25s,backdrop-filter .25s}
+.pill .lens.drag{transition:translate .08s linear,scale .3s cubic-bezier(.34,1.56,.64,1),background .2s,box-shadow .2s,backdrop-filter .2s}
+.pill .lens.up{--s:1.34;
+  background:linear-gradient(135deg,rgba(255,255,255,.30),rgba(255,255,255,.06));
+  -webkit-backdrop-filter:blur(3px) saturate(210%) brightness(1.12);backdrop-filter:blur(3px) saturate(210%) brightness(1.12);
+  box-shadow:inset 0 0 0 1.2px rgba(255,255,255,.75),inset 4px 0 7px -2px rgba(255,70,70,.38),inset -4px 0 7px -2px rgba(70,110,255,.42),inset 0 3px 6px rgba(255,255,255,.55),0 12px 30px rgba(0,0,0,.22)}
+body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+.toast{bottom:calc(98px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:reduce){.pill .lens,.pill .tab svg{transition:none}}
