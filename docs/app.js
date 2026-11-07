@@ -394,7 +394,7 @@ function viewAlbum(){
   return out.join('');
 }
 const who = uid => uid||'家人';
-function thumb(p){return `<button class="ph" data-view="${esc(p.id)}"><img loading="lazy" src="${esc(p.thumb||'')}" alt="${esc(who(p.uid))} 拍的照片"><span>${esc(who(p.uid))}</span>${p.late?'<span class="late">遲到</span>':''}</button>`}
+function thumb(p){return `<button class="ph" data-view="${esc(p.id)}"><img loading="lazy" src="${esc(p.thumb||'')}" alt="${esc(who(p.uid))} 拍的照片"><span>${esc(who(p.uid))}</span>${p.late?'<span class="late">遲到</span>':''}${p.caption?'<span class="cap">💬</span>':''}</button>`}
 
 function viewSOS(){
   const hs=S.info?.hotels||[];
@@ -452,7 +452,7 @@ function renderSheet(){
   else if(sh.type==='photo'){const p=S.photos.find(x=>x.id===sh.id); if(!p){closeSheet();return}
     if(!S.full[p.id]&&S.db){S.full[p.id]='loading';S.db.getFull(p.id).then(u=>{S.full[p.id]=u||p.thumb;if(S.sheet?.id===p.id)renderSheet()}).catch(()=>{S.full[p.id]=p.thumb;renderSheet()})}
     const fu=S.full[p.id]&&S.full[p.id]!=='loading'?S.full[p.id]:p.thumb;
-    $('#layer').innerHTML=`<div class="lightbox" data-act="close"><img src="${esc(fu||'')}" alt=""><div>${esc(who(p.uid))}・${esc(new Date(p.takenAt).toLocaleString('zh-TW',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${p.late?'・遲到':''}</div><button class="btn" data-act="close">關閉</button></div>`;return}
+    $('#layer').innerHTML=`<div class="lightbox" data-act="close"><img src="${esc(fu||'')}" alt="">${p.caption?`<div class="lbcap">${esc(p.caption)}</div>`:''}<div>${esc(who(p.uid))}・${esc(new Date(p.takenAt).toLocaleString('zh-TW',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${p.late?'・遲到':''}</div><button class="btn" data-act="close">關閉</button></div>`;return}
   const keepScroll=$('#layer .sheet')?.scrollTop;
   $('#layer').innerHTML=`<div class="scrim" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true">${inner}</div>`;
   if(keepScroll) $('#layer .sheet').scrollTop=keepScroll;
@@ -648,23 +648,121 @@ function startShoot(key){
   if(!S.db){toast('還在載入，請稍後再試');return}
   if(!S.uid){askName();return}
   if(myPhoto(key)){toast('這裡你已經拍過了');return}
-  S.pending=key; const el=$('#cam'); el.value=''; el.click();
+  openCamera(key);
 }
 function dataUrlOf(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(blob)})}
+
+/* ---------- 雙鏡頭拍照：先拍後鏡頭，自動切前鏡頭自拍，合成一張，拍完可以寫說明 ---------- */
+const CAM={stream:null,key:null,stage:'live',shot:null,facing:'environment'};
+function camLabel(key){
+  if(key.startsWith('s-')) return S.stops.find(x=>'s-'+x.id===key)?.name||'打卡';
+  return '隨機拍';
+}
+function openCamera(key){
+  if($('#camWrap')) return;
+  CAM.key=key; CAM.stage='live'; CAM.shot=null;
+  const w=document.createElement('div'); w.id='camWrap'; w.className='camwrap';
+  w.innerHTML=`<div class="camtop"><button class="camx" data-act="cam-close" aria-label="關閉">${I.x}</button><b>${esc(camLabel(key))}</b><span></span></div>
+    <div class="camstage" id="camStage"><video id="camVideo" playsinline muted autoplay></video><div class="camspin" id="camSpin" hidden><i></i><span>展現真我</span></div></div>
+    <div class="cambar" id="camBar"><button class="shutter" data-act="cam-shot" aria-label="拍照"></button></div>
+    <div class="camhint" id="camHint">先拍後鏡頭，接著會自動拍一張自拍</div>`;
+  document.body.appendChild(w); document.body.style.overflow='hidden';
+  if(!navigator.mediaDevices?.getUserMedia){ camFallback(); return }
+  startStream('environment').catch(e=>{console.warn(e);camFallback()});
+}
+async function startStream(facing){
+  stopStream();
+  CAM.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1920}},audio:false});
+  const v=$('#camVideo'); if(!v) {stopStream();return}
+  v.srcObject=CAM.stream; v.style.transform=''; await v.play().catch(()=>{});
+  for(let i=0;i<40&&!(v.videoWidth>0&&v.readyState>=2);i++) await new Promise(r=>setTimeout(r,50));
+}
+function stopStream(){ CAM.stream?.getTracks().forEach(t=>t.stop()); CAM.stream=null }
+function closeCamera(){ stopStream(); $('#camWrap')?.remove(); if(!S.sheet) document.body.style.overflow='' }
+function camFallback(){
+  toast('無法使用相機，改用系統拍照',3500);
+  const el=$('#cam'); el.value=''; S.pending=CAM.key; el.click();
+}
+function grabFrame(){
+  const v=$('#camVideo'); const c=document.createElement('canvas'); c.width=v.videoWidth; c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0); return c;
+}
+function cover(ctx,src,x,y,w,h,r=0){
+  const sw=src.width||src.videoWidth, sh=src.height||src.videoHeight; const k=Math.max(w/sw,h/sh); const dw=sw*k, dh=sh*k;
+  ctx.save(); if(r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.clip()} ctx.drawImage(src,x+(w-dw)/2,y+(h-dh)/2,dw,dh); ctx.restore();
+}
+function composite(back,front){
+  const W=1080,H=1440; const c=document.createElement('canvas'); c.width=W; c.height=H; const ctx=c.getContext('2d');
+  cover(ctx,back,0,0,W,H);
+  if(front){
+    const pw=300,ph=400,px=36,py=36;
+    ctx.save(); ctx.beginPath(); ctx.roundRect(px-5,py-5,pw+10,ph+10,34); ctx.fillStyle='#000'; ctx.fill(); ctx.restore();
+    cover(ctx,front,px,py,pw,ph,30);
+  }
+  return c;
+}
+async function camShutter(){
+  if(CAM.stage!=='live') return; CAM.stage='busy';
+  const bar=$('#camBar'), spin=$('#camSpin'), hint=$('#camHint');
+  let back=null, front=null;
+  try{
+    back=grabFrame(); vib(25);
+    if(bar) bar.style.visibility='hidden'; if(spin) spin.hidden=false; if(hint) hint.textContent='';
+    // iPhone 的網頁一次只能開一顆鏡頭：後鏡頭拍完，關掉再開前鏡頭自拍
+    try{ await startStream('user'); await new Promise(r=>setTimeout(r,650)); front=grabFrame(); }catch(e){ console.warn('front camera failed',e) }
+  }catch(e){ console.warn(e) }
+  stopStream();
+  if(!back){ toast('拍照失敗，請再試一次'); closeCamera(); return }
+  CAM.shot=composite(back,front); CAM.hadFront=!!front;
+  camReview();
+}
+function camReview(){
+  const w=$('#camWrap'); if(!w) return; CAM.stage='review';
+  const url=CAM.shot.toDataURL('image/jpeg',.85);
+  w.innerHTML=`<div class="camtop"><button class="camx" data-act="cam-close" aria-label="關閉">${I.x}</button><b>${esc(camLabel(CAM.key))}</b><button class="camretake" data-act="cam-retake">重拍</button></div>
+    <div class="camreview">
+      <textarea id="camCaption" maxlength="80" rows="2" placeholder="新增配文…"></textarea>
+      <div class="camimg"><img src="${url}" alt="剛拍的照片"></div>
+      ${CAM.hadFront?'':'<div class="note" style="text-align:center;color:#bbb">自拍鏡頭沒打開，這張只有主畫面</div>'}
+      <button class="sendbtn" data-act="cam-send">傳送 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 4l17 8-17 8 3-8z"/></svg></button>
+      <div class="note" style="text-align:center;color:#bbb">傳送後這個景點就不能再拍了</div>
+    </div>`;
+}
+async function camRetake(){
+  const w=$('#camWrap'); if(!w) return; const key=CAM.key; closeCamera(); openCamera(key);
+}
+async function camSend(){
+  if(CAM.stage!=='review'||!CAM.shot) return; CAM.stage='sending';
+  const caption=($('#camCaption')?.value||'').trim().slice(0,80);
+  const btn=$('.sendbtn'); if(btn){btn.disabled=true;btn.textContent='上傳中…'}
+  try{
+    let full=CAM.shot.toDataURL('image/jpeg',.72); if(full.length>600000) full=CAM.shot.toDataURL('image/jpeg',.55);
+    const t=document.createElement('canvas'); t.width=260; t.height=347; t.getContext('2d').drawImage(CAM.shot,0,0,260,347);
+    const thumb=t.toDataURL('image/jpeg',.6);
+    await submitPhoto(CAM.key,full,thumb,caption);
+    closeCamera();
+  }catch(e){ console.error(e); CAM.stage='review'; if(btn){btn.disabled=false;btn.innerHTML='傳送'} toast(e?.code==='permission-denied'||e?.code==='exists'?'這張你已經拍過了':'上傳失敗，請檢查網路再試一次',4000) }
+}
+async function submitPhoto(key,full,thumb,caption){
+  if(myPhoto(key)) throw Object.assign(new Error('exists'),{code:'exists'});
+  const now=jst(); let doc={uid:S.uid,key,thumb,caption:caption||'',takenAt:new Date().toISOString()};
+  if(key.startsWith('s-')){const s=S.stops.find(x=>'s-'+x.id===key);Object.assign(doc,{kind:'spot',stopId:s?.id||'',day:s?.day||now.date,place:s?.name||''})}
+  else {const [, d, n]=/^r-(\d{4}-\d\d-\d\d)-(\d)$/.exec(key);const t=flashSlots(d)[+n-1];Object.assign(doc,{kind:'random',day:d,slot:+n,late:now.date!==d||now.min>t+ONTIME_MIN})}
+  await S.db.putPhoto(photoKeyFor(S.uid,key),doc,full);
+  if(doc.stopId) S.db.saveStop(doc.stopId,{visited:true}).catch(()=>{});
+  vib(60); toast(doc.late?'已上傳（遲到了，但有拍到！）':'已上傳');
+}
+// 備用：相機打不開時用系統拍照，一樣可以寫說明
 async function onShot(file){
   const key=S.pending; S.pending=null; if(!file||!key) return;
   if(myPhoto(key)){toast('這裡你已經拍過了');return}
-  toast('上傳中…',6000);
   try{
-    const full=await dataUrlOf(await compress(file,1280,.72));
-    const thumb=await dataUrlOf(await compress(file,260,.6));
-    const now=jst(); let doc={uid:S.uid,key,thumb,takenAt:new Date().toISOString()};
-    if(key.startsWith('s-')){const s=S.stops.find(x=>'s-'+x.id===key);Object.assign(doc,{kind:'spot',stopId:s?.id||'',day:s?.day||now.date,place:s?.name||''})}
-    else {const [, d, n]=/^r-(\d{4}-\d\d-\d\d)-(\d)$/.exec(key);const t=flashSlots(d)[+n-1];Object.assign(doc,{kind:'random',day:d,slot:+n,late:now.date!==d||now.min>t+ONTIME_MIN})}
-    await S.db.putPhoto(photoKeyFor(S.uid,key),doc,full);
-    if(doc.stopId) S.db.saveStop(doc.stopId,{visited:true}).catch(()=>{});
-    vib(60); toast(doc.late?'已上傳（遲到了，但有拍到！）':'已上傳');
-  }catch(e){console.error(e);toast(e?.code==='permission-denied'||e?.code==='exists'?'這張你已經拍過了':'上傳失敗，請檢查網路再試一次',4000)}
+    const c=await createImageBitmap(file,{imageOrientation:'from-image'}).catch(()=>null);
+    if(!c){toast('讀不到照片');return}
+    CAM.key=key; CAM.shot=composite(c,null); CAM.hadFront=false;
+    if(!$('#camWrap')){const w=document.createElement('div');w.id='camWrap';w.className='camwrap';document.body.appendChild(w);document.body.style.overflow='hidden'}
+    camReview();
+  }catch(e){toast('讀不到照片')}
 }
 
 /* ---------- name ---------- */
@@ -800,6 +898,10 @@ document.addEventListener('click',e=>{
   else if(d.act==='jump-next'){document.getElementById('nextAnchor')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}
   else if(d.act==='imgview-close'){closeImgView()}
   else if(d.act==='imgview-zoom'){t.closest('.iv-body').classList.toggle('zoomed')}
+  else if(d.act==='cam-close'){closeCamera()}
+  else if(d.act==='cam-shot'){camShutter()}
+  else if(d.act==='cam-retake'){camRetake()}
+  else if(d.act==='cam-send'){camSend()}
   else if(d.act==='paper-close'){closePaper()}
   else if(d.act==='close'){ if(S.sheet?.type==='photo'&&S.sheet.back){S.sheet=S.sheet.back;renderSheet()} else closeSheet() }
   else if(d.act==='add'){ openSheet({type:'form',day:S.day}) }
@@ -812,7 +914,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('submit',e=>{if(e.target.id==='stopForm'){e.preventDefault();submitForm(e.target)}});
 $('#cam').addEventListener('change',e=>onShot(e.target.files[0]));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#imgView'))closeImgView();else if($('#paperWrap'))closePaper();else if(S.sheet)closeSheet()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#camWrap')){closeCamera();return}if($('#imgView'))closeImgView();else if($('#paperWrap'))closePaper();else if(S.sheet)closeSheet()}});
 
 /* ---------- ticking: clock, flash alerts, closing alerts ---------- */
 function tick(){
