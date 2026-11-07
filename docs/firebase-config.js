@@ -9,5 +9,5 @@ export const FIREBASE_CONFIG = {
 };
 // 家人共用的行程代碼：資料都放在這個代碼底下。換成你自己的一串亂碼，不要公開。
 // 推播用的金鑰：Firebase 控制台 → 專案設定 → 雲端通訊 → 網路推送憑證 → 產生金鑰組，貼公開金鑰
-export const VAPID_KEY = '';
+export const VAPID_KEY = 'BOBsQRzIY-JW2-FlHTdPIdMLNyGEMyJQSNZLRVOTXhy-0Rp4xRvHLW3Ie7DY0KnG8xl1dm2wTIIqbEaE7S122gs';
 export const TRIP_CODE = 'gssi2005designbyd1ven9tangjapantripapp';
