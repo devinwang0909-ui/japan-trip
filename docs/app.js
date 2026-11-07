@@ -135,12 +135,8 @@ function viewPlan(){
   const flash=flashState(day,now);
   if(flash.active) out.push(flashAlert(flash,day));
   if(nxt) out.push(viewNext(nxt,now));
-  else if(now.date<DAYS[0] && day===DAYS[0] && list[0]){
-    const days=Math.round((Date.parse(DAYS[0]+'T00:00:00+09:00')-Date.now())/864e5);
-    out.push(`<div class="card next"><div class="label">還有 ${Math.max(days,0)} 天出發</div><h2>第一站：${esc(list[0].name)}</h2></div>`);
-  }
-  // 2) 背景資訊壓成一條：天氣、隨機拍
-  out.push(`<div class="card strip">${viewWeather(day)}${flash.active?'':flashRow(flash)}${pushRow()}</div>`);
+  // 2) 背景資訊：天氣、通知
+  out.push(`<div class="card strip">${viewWeather(day)}${pushRow()}</div>`);
   // 3) 行程時間軸
   if(!list.length){
     out.push(`<div class="empty"><h3>${md(day)} 還沒有行程</h3><p>想臨時加一個地方，點下方「新增景點」。</p></div>`);
@@ -222,7 +218,7 @@ function pushRow(){
   const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
   const ios=/iP(hone|ad|od)/.test(navigator.userAgent);
   if(ls.get('pushOn',false)&&typeof Notification!=='undefined'&&Notification.permission==='granted')
-    return `<div class="srow"><span class="sico">🔔</span><div class="grow"><b>通知已開啟</b> <span class="note">隨機拍、集合時間到會提醒你</span></div></div>`;
+    return '';
   if(ios&&!standalone) return `<div class="srow"><span class="sico">🔔</span><div class="grow"><b>想收通知？</b><div class="note">先用 Safari「加入主畫面」，再從主畫面圖示打開</div></div></div>`;
   return `<div class="srow"><span class="sico">🔔</span><div class="grow"><b>開啟通知</b></div><button class="btn primary sm" data-act="push-on">開啟</button></div>`;
 }
@@ -240,12 +236,6 @@ function flashAlert(f,day){
     <div style="font-weight:700;font-size:17px">現在！拍一張</div>
     <div class="note" style="color:inherit;opacity:.8">${c.left>0?`還剩 ${c.left} 分鐘算準時`:'已過準時，遲到也能拍'}</div></div>
     <button class="btn" style="background:var(--flash-ink);color:var(--flash);border:0;min-height:48px;padding:0 20px;font-size:16px" data-shoot="${esc(c.key)}">${I.cam}拍</button></div></div>`;
-}
-function flashRow(f){
-  const dots=f.items.map(x=>`<span class="dot3 ${x.st}" title="第 ${x.i+1} 次">${x.st==='done'?'✓':x.st==='miss'?'✕':''}</span>`).join('');
-  const done=f.items.filter(x=>x.st==='done').length;
-  const sub=f.before?'':(f.after?`已拍 ${done} 張`:`今天已拍 ${done} / 3`);
-  return `<div class="srow"><span class="sico">📷</span><div class="grow"><b>隨機拍</b> <span class="note">${esc(sub)}</span></div><div class="dots3">${dots}</div></div>`;
 }
 
 
