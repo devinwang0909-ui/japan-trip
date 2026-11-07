@@ -97,7 +97,7 @@ function hoursState(s, now){
   if(o!=null&&now.min<o) return {kind:'info',text:`${hm(o)} 開門`};
   return {kind:'open',text:`${word} ${hm(c)}`};
 }
-function photoKeyFor(uid,key){return `${uid}__${key}`.replace(/[^A-Za-z0-9_\-.~:@+]/g,'_')}
+function photoKeyFor(uid,key){const hex=Array.from(new TextEncoder().encode(String(uid))).map(b=>b.toString(16).padStart(2,'0')).join('');return `${hex}__${key}`}
 const myPhoto = key => S.photos.find(p=>p.uid===S.uid&&p.key===key);
 
 /* ---------- rendering ---------- */
@@ -139,7 +139,7 @@ function viewPlan(){
     out.push(`<div class="card next"><div class="label">還有 ${Math.max(days,0)} 天出發</div><h2>第一站：${esc(list[0].name)}</h2></div>`);
   }
   // 2) 背景資訊壓成一條：天氣、隨機拍
-  out.push(`<div class="card strip">${viewWeather(day)}${flash.active?'':flashRow(flash)}</div>`);
+  out.push(`<div class="card strip">${viewWeather(day)}${flash.active?'':flashRow(flash)}${pushRow()}</div>`);
   // 3) 行程時間軸
   if(!list.length){
     out.push(`<div class="empty"><h3>${md(day)} 還沒有行程</h3><p>想臨時加一個地方，點下方「新增景點」。</p></div>`);
@@ -216,6 +216,23 @@ function flashState(day,now){
   });
   const cur=items.find(x=>x.st==='open');
   return {items,active:!!cur,cur,before,after,isToday};
+}
+function pushRow(){
+  if(!S.db||S.db.mode!=='cloud'||!S.db.pushReady) return '';
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+  const ios=/iP(hone|ad|od)/.test(navigator.userAgent);
+  if(ls.get('pushOn',false)&&typeof Notification!=='undefined'&&Notification.permission==='granted')
+    return `<div class="srow"><span class="sico">🔔</span><div class="grow"><b>通知已開啟</b> <span class="note">隨機拍、集合時間到會提醒你</span></div></div>`;
+  if(ios&&!standalone) return `<div class="srow"><span class="sico">🔔</span><div class="grow"><b>想收通知？</b><div class="note">先用 Safari「加入主畫面」，再從主畫面圖示打開</div></div></div>`;
+  return `<div class="srow"><span class="sico">🔔</span><div class="grow"><b>開啟通知</b><div class="note">不開網頁也會提醒隨機拍和集合</div></div><button class="btn primary sm" data-act="push-on">開啟</button></div>`;
+}
+async function enablePush(){
+  if(!S.uid){askName();return}
+  try{
+    await S.db.enablePush(S.uid); ls.set('pushOn',true); toast('通知已開啟'); render();
+  }catch(e){
+    toast(e?.code==='denied'?'你沒有允許通知，請到手機設定開啟':e?.code==='unsupported'?'這個瀏覽器不支援通知':'開啟失敗，請稍後再試',4000);
+  }
 }
 function flashAlert(f,day){
   const c=f.cur;
@@ -644,6 +661,7 @@ document.addEventListener('click',e=>{
   else if(d.tab){S.tab=d.tab;render();window.scrollTo({top:0})}
   else if(d.tmr){timerAction(d.tmr)}
   else if(d.tmrpre){S.tmrMin=+d.tmrpre;const c=$('#tmrCustom');if(c)c.value=d.tmrpre;document.querySelectorAll('.pre').forEach(b=>b.classList.toggle('on',b.dataset.tmrpre===d.tmrpre))}
+  else if(d.act==='push-on'){enablePush()}
   else if(d.act==='tmr-ok'){stopRinging();$('#tmrDone')?.remove();if(S.tab==='timer')render()}
   else if(d.imgview){const m=S.stops.find(x=>x.id===d.imgview)?.floorMap;if(m)openImgView(m.src,m.caption)}
   else if(d.route){e.preventDefault();openSheet({type:'route',id:d.route})}
@@ -739,6 +757,7 @@ async function boot(){
   db.onPhotos(list=>{S.photos=list;saveCache();render()},err);
   db.onTimer(t=>{S.timer=t;timerTick();if(S.tab==='timer'&&!document.activeElement?.matches?.('input'))render()},()=>{});
   if(!S.uid) setTimeout(()=>{if(!S.uid)askName()},600);
+  if(S.uid&&db.enablePush&&ls.get('pushOn',false)&&typeof Notification!=='undefined'&&Notification.permission==='granted') db.enablePush(S.uid).catch(()=>{});
 }
 boot();
 })();

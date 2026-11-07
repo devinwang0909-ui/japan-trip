@@ -1,4 +1,4 @@
-import { FIREBASE_CONFIG, TRIP_CODE } from './firebase-config.js';
+import { FIREBASE_CONFIG, TRIP_CODE, VAPID_KEY } from './firebase-config.js';
 import { INFO, STOPS, SEED_VERSION, REMOVED_IDS } from './trip.js';
 
 const SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
@@ -78,6 +78,19 @@ async function firebaseData() {
     onStops(cb, err) { listen(col('stops'), cb, err); },
     onInfo(cb, err) { fs.onSnapshot(ref('meta', 'info'), (s) => cb(s.exists() ? s.data() : INFO), err); },
     onPhotos(cb, err) { listen(col('photos'), cb, err); },
+    pushReady: !!VAPID_KEY,
+    async enablePush(name) {
+      const { getMessaging, getToken, isSupported } = await import(SDK + 'firebase-messaging.js');
+      if (!(await isSupported())) throw Object.assign(new Error('unsupported'), { code: 'unsupported' });
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') throw Object.assign(new Error('denied'), { code: 'denied' });
+      const reg = await navigator.serviceWorker.ready;
+      const token = await getToken(getMessaging(app), { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+      if (!token) throw Object.assign(new Error('no token'), { code: 'notoken' });
+      const hex = Array.from(new TextEncoder().encode(name)).map((b) => b.toString(16).padStart(2, '0')).join('');
+      await fs.setDoc(ref('tokens', hex + '_' + token.slice(-12).replace(/[^A-Za-z0-9]/g, '')), { name, token, updatedAt: Date.now() });
+      return true;
+    },
     onTimer(cb, err) { fs.onSnapshot(ref('meta', 'timer'), (s) => cb(s.exists() ? s.data() : null), err); },
     async setTimer(t) { await fs.setDoc(ref('meta', 'timer'), strip(t)); },
     newId() { return fs.doc(col('stops')).id; },
