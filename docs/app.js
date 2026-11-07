@@ -7,7 +7,7 @@ const DAYS = ['2026-11-11','2026-11-12','2026-11-13','2026-11-14'];
 const DOW = ['日','一','二','三','四','五','六'];
 const ONTIME_MIN = 15;              // 隨機拍：開放後幾分鐘內算準時
 const S = {tab:'plan', day:null, stops:[], info:null, weather:{}, photos:[], uid:null,
-  canWrite:true, db:null, ready:false, stale:false, sheet:null, pending:null, full:{}, timer:null, toolOpen:{fx:false,timer:false}, fx:{rate:0.21,at:'',live:false,jpy:'',twd:''}};
+  canWrite:true, db:null, ready:false, stale:false, sheet:null, pending:null, full:{}, timer:null, dbErr:'', toolOpen:{fx:false,timer:false}, fx:{rate:0.21,at:'',live:false,jpy:'',twd:''}};
 
 /* ---------- utils ---------- */
 const $ = s => document.querySelector(s);
@@ -123,7 +123,7 @@ function viewPlan(){
   const now=jst(); const day=S.day; const list=sorted(day);
   const out=[];
   if(!S.ready&&!S.stops.length) out.push(`<div class="status">載入行程中…</div>`);
-  if(S.stale) out.push(`<div class="banner info">目前連不上資料庫，顯示的是這支手機上次存下的行程。</div>`);
+  if(S.stale) out.push(`<div class="banner info" role="status"><div class="grow">連不上資料庫，先顯示這支手機上次存的行程${S.dbErr?`（${esc(S.dbErr)}）`:''}。${navigator.onLine===false?'目前手機沒有網路。':''}</div><button class="btn sm" data-act="reload">重新連線</button></div>`);
   const isToday = day===now.date;
   const nxt = isToday ? list.find(s=>!s.visited) : null;
   if(nxt){
@@ -160,7 +160,6 @@ function viewPlan(){
         <div class="body">
           ${s.photo?`<div class="ph2">${photoBanner(s.photo)}${s.time?`<span class="tchip">${esc(s.time)}</span>`:''}</div>`:(s.time?`<div class="tm">${esc(s.time)}</div>`:'')}
           <h3><span class="em" aria-hidden="true">${emojiOf(guessArt(s))}</span>${esc(s.name)}</h3>
-          ${s.nameJa?`<div class="ja1">${esc(s.nameJa)}</div>`:''}
           ${pills?`<div class="meta">${pills}</div>`:''}
         </div></button>`);
     });
@@ -200,7 +199,7 @@ function viewWeather(day){
   const w=S.weather[day];
   const city=w?.city||S.info?.city||'';
   const q=encodeURIComponent((city||'日本')+' 天氣');
-  if(!w) return `<div class="srow"><span class="sico">☁️</span><div class="grow"><b>${md(day)} 天氣</b><div class="note">出發前 7 天內才有預報</div></div><a class="btn ghost sm" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">查看</a></div>`;
+  if(!w) return `<div class="srow"><span class="sico">☁️</span><div class="grow"><b>${md(day)} 天氣</b></div><a class="btn ghost sm" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">查看</a></div>`;
   const hrs=(w.hourly||[]).map(h=>`<div>${esc(h.h)}<b>${Math.round(h.t)}°</b>${h.pop!=null?h.pop+'%':''}</div>`).join('');
   return `<details class="wxd"><summary class="srow"><span class="sico wxi">${wxIcon(w.code)}</span>
     <div class="grow"><b class="mono">${Math.round(w.tmax)}° / ${Math.round(w.tmin)}°</b> <span class="note">${esc(city)}・${esc(w.summary||wxText(w.code))}${w.pop!=null?`・降雨 ${w.pop}%`:''}</span></div><span class="chev">›</span></summary>
@@ -225,7 +224,7 @@ function pushRow(){
   if(ls.get('pushOn',false)&&typeof Notification!=='undefined'&&Notification.permission==='granted')
     return `<div class="srow"><span class="sico">🔔</span><div class="grow"><b>通知已開啟</b> <span class="note">隨機拍、集合時間到會提醒你</span></div></div>`;
   if(ios&&!standalone) return `<div class="srow"><span class="sico">🔔</span><div class="grow"><b>想收通知？</b><div class="note">先用 Safari「加入主畫面」，再從主畫面圖示打開</div></div></div>`;
-  return `<div class="srow"><span class="sico">🔔</span><div class="grow"><b>開啟通知</b><div class="note">不開網頁也會提醒隨機拍和集合</div></div><button class="btn primary sm" data-act="push-on">開啟</button></div>`;
+  return `<div class="srow"><span class="sico">🔔</span><div class="grow"><b>開啟通知</b></div><button class="btn primary sm" data-act="push-on">開啟</button></div>`;
 }
 async function enablePush(){
   if(!S.uid){askName();return}
@@ -245,7 +244,7 @@ function flashAlert(f,day){
 function flashRow(f){
   const dots=f.items.map(x=>`<span class="dot3 ${x.st}" title="第 ${x.i+1} 次">${x.st==='done'?'✓':x.st==='miss'?'✕':''}</span>`).join('');
   const done=f.items.filter(x=>x.st==='done').length;
-  const sub=f.before?'每天 3 次，每人時間不同':(f.after?`已拍 ${done} 張`:`今天已拍 ${done} / 3`);
+  const sub=f.before?'':(f.after?`已拍 ${done} 張`:`今天已拍 ${done} / 3`);
   return `<div class="srow"><span class="sico">📷</span><div class="grow"><b>隨機拍</b> <span class="note">${esc(sub)}</span></div><div class="dots3">${dots}</div></div>`;
 }
 
@@ -260,11 +259,11 @@ const fxFmt=(n,d=0)=>Number.isFinite(n)?n.toLocaleString('en-US',{maximumFractio
 /* ---------- 工具頁：可摺疊的區塊 ---------- */
 function toolSection(id,icon,title,sum,body){
   const open=!!S.toolOpen[id];
-  return `<details class="tool card" data-tool="${id}"${open?' open':''}><summary><span class="tico">${icon}</span><span class="tt"><b>${title}</b><small id="sum-${id}">${sum}</small></span><span class="chev">›</span></summary><div class="tbody">${body}</div></details>`;
+  return `<details class="tool card" data-tool="${id}"${open?' open':''}><summary><span class="tico">${icon}</span><span class="tt"><b>${title}</b><small id="sum-${id}"${sum?'':' hidden'}>${sum}</small></span><span class="chev">›</span></summary><div class="tbody">${body}</div></details>`;
 }
 function timerSummary(){
   const left=timerLeft();
-  return left!=null&&left>0?`倒數 ${fmtT(left)}${S.timer?.label?`・${esc(S.timer.label)}`:''}`:'各自行動，時間到全家一起響';
+  return left!=null&&left>0?`倒數 ${fmtT(left)}${S.timer?.label?`・${esc(S.timer.label)}`:''}`:'';
 }
 function viewTools(){
   return toolSection('fx','💴','匯率計算',`1 日圓 = ${esc(String(S.fx.rate))} 台幣`,viewFx())
@@ -364,7 +363,7 @@ function timerTick(){
       if(!seen[S.timer.id]&&(-left)<30*60000){seen[S.timer.id]=1;ls.set('tmrSeen',seen);showTimerDone(S.timer,-left/1000)}
     }
     if(S.tab==='tools'){
-      const sm=$('#sum-timer'); if(sm) sm.textContent=left>0?`倒數 ${fmtT(left)}${S.timer?.label?`・${S.timer.label}`:''}`:'各自行動，時間到全家一起響';
+      const sm=$('#sum-timer'); if(sm){sm.textContent=left>0?`倒數 ${fmtT(left)}${S.timer?.label?`・${S.timer.label}`:''}`:'';sm.hidden=!(left>0)}
       const n=$('#tmrNum');
       if(left>0&&n){n.textContent=fmtT(left);const a=$('#tmrArc');if(a)a.style.strokeDashoffset=RING*(1-left/((S.timer.minutes||1)*60000))}
       else if(left<=0&&n) render();
@@ -414,14 +413,14 @@ function viewSOS(){
     <div class="card"><div class="label">救護車・火災</div><div class="big">119</div><div class="note">說「救急車」或「火事」</div></div>
   </div>
   ${hotelCards}
-  ${toolSection('sosphone','📞','緊急聯絡電話','駐大阪辦事處、旅客熱線等 5 組',`
+  ${toolSection('sosphone','📞','緊急聯絡電話','',`
     ${ph('駐大阪辦事處 緊急聯絡','090-8794-4568','你們這趟的轄區（大阪、京都）。被捕、重大犯罪受害、緊急就醫')}
     ${ph('駐大阪辦事處 上班時間','06-6227-8623','護照遺失、一般領務')}
     ${ph('駐日代表處（東京）緊急聯絡','080-1009-7179','備用，東京總館')}
     ${ph('日本觀光局訪日旅客熱線','050-3816-2787','24 小時，有中文、英文')}
     ${ph('急病諮詢（要不要叫救護車）','#7119','東京、大阪等地適用')}
     <p class="note" style="margin:10px 0 0">電話來源：外交部領事事務局。出發前建議再到官網確認一次。</p>`)}
-  ${toolSection('sosloss','🪪','護照或錢包不見了','報案、補辦、掛失',`
+  ${toolSection('sosloss','🪪','護照或錢包不見了','',`
     <ul class="bul" style="margin-top:0">
       <li>到最近的警察局（交番）報案，拿「遺失届出証明」或「盗難届出受理番号」</li>
       <li>護照遺失：帶報案證明和 2 吋照片到代表處辦「入國證明書」</li>
@@ -887,6 +886,7 @@ document.addEventListener('click',e=>{
   else if(d.act==='jump-next'){document.getElementById('nextAnchor')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}
   else if(d.act==='imgview-close'){closeImgView()}
   else if(d.act==='imgview-zoom'){t.closest('.iv-body').classList.toggle('zoomed')}
+  else if(d.act==='reload'){location.reload()}
   else if(d.act==='cam-close'){closeCamera()}
   else if(d.act==='cam-shot'){camShutter()}
   else if(d.act==='cam-retake'){camRetake()}
@@ -961,12 +961,12 @@ async function boot(){
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();loadWeather()}});
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
   loadWeather();
-  const timer=setTimeout(()=>{S.stale=true;S.ready=true;render()},10000);
+  const timer=setTimeout(()=>{S.stale=true;S.dbErr=S.dbErr||'逾時';S.ready=true;render()},20000);
   let db; try{db=await createData()}catch(e){console.error(e)}
   if(!db){clearTimeout(timer);S.stale=!!S.stops.length;S.ready=true;render();return}
   S.db=db; db.init().catch(()=>{});
-  const err=()=>{clearTimeout(timer);S.stale=true;S.ready=true;render()};
-  db.onStops((list,fromCache)=>{S.stops=list;if(!fromCache){clearTimeout(timer);S.stale=false}S.ready=true;saveCache();render()},err);
+  const err=e=>{clearTimeout(timer);S.dbErr=e?.code||'錯誤';console.warn('db error',e);S.stale=true;S.ready=true;render()};
+  db.onStops((list,fromCache)=>{S.stops=list;if(!fromCache){clearTimeout(timer);S.stale=false;S.dbErr=''}S.ready=true;saveCache();render()},err);
   db.onInfo(i=>{S.info=i;if(i?.title)$('#ttl').textContent=i.title;saveCache();render()},err);
   db.onPhotos(list=>{S.photos=list;saveCache();render()},err);
   db.onTimer(t=>{S.timer=t;timerTick();if(S.tab==='tools'&&!document.activeElement?.matches?.('input'))render()},()=>{});

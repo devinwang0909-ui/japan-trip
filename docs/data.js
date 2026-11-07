@@ -50,7 +50,8 @@ async function firebaseData() {
     import(SDK + 'firebase-app.js'), import(SDK + 'firebase-auth.js'), import(SDK + 'firebase-firestore.js'),
   ]);
   const app = initializeApp(FIREBASE_CONFIG);
-  const db = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) });
+  // 部分網路（公司、旅館、行動網路）會擋掉 WebSocket 連線，開啟自動偵測改用長輪詢，比較不會「連不上」
+  const db = fs.initializeFirestore(app, { experimentalAutoDetectLongPolling: true, localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) });
   const auth = getAuth(app);
   if (!auth.currentUser) await signInAnonymously(auth);
   const base = `t/${TRIP_CODE}`;

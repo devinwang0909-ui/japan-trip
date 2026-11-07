@@ -1,37 +1,40 @@
 /* Layout: one-column phone app — sticky day bar, timeline of stops, bottom tab bar, slide-up sheets. */
-/* Apple 風格：系統字體、毛玻璃、大圓角、柔和陰影、系統色 */
+/* 旅行雜誌風：象牙白底、黑曜石黑主色、香檳金只用在細節、標題用襯線字 */
 :root{
-  --paper:#F2F2F7; --card:#FFFFFF; --ink:#1C1C1E; --muted:#6C6C70; --line:rgba(60,60,67,.16);
-  --fill:rgba(118,118,128,.12); --seg-on:#FFFFFF;
-  --ai:#007AFF; --ai-ink:#FFFFFF; --ai-soft:rgba(0,122,255,.12);
-  --go:#248A3D; --go-soft:rgba(52,199,89,.16);
-  --warn:#B25000; --warn-soft:rgba(255,159,10,.18);
-  --bad:#D70015; --bad-soft:rgba(255,59,48,.14);
-  --flash:#FFD60A; --flash-ink:#1C1A00;
-  --shadow:0 0 0 .5px rgba(0,0,0,.04),0 2px 12px rgba(0,0,0,.05);
-  --f-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
-  --f-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
-  --f-mono:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+  --paper:#F5F2EA; --card:#FBF9F4; --ink:#292929; --muted:#6F6A5F; --line:rgba(23,23,23,.12);
+  --fill:rgba(23,23,23,.06); --seg-on:#FFFFFF;
+  --obsidian:#171717; --gold:#B99B62; --gold-ink:#7C6431;
+  --ai:#171717; --ai-ink:#F5F2EA; --ai-soft:rgba(185,155,98,.18);
+  --go:#2F6B4F; --go-soft:rgba(47,107,79,.13);
+  --warn:#8A5A12; --warn-soft:rgba(185,130,40,.16);
+  --bad:#A33224; --bad-soft:rgba(163,50,36,.12);
+  --flash:#B99B62; --flash-ink:#171717;
+  --shadow:0 0 0 .5px rgba(23,23,23,.05),0 2px 14px rgba(23,23,23,.06);
+  --f-display:"Noto Serif TC","Songti TC","Source Han Serif TC","PMingLiU",Georgia,serif;
+  --f-body:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"PingFang TC",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --paper:#000000; --card:#1C1C1E; --ink:#F2F2F7; --muted:#9A9AA0; --line:rgba(84,84,88,.5);
-  --fill:rgba(118,118,128,.24); --seg-on:#636366;
-  --ai:#0A84FF; --ai-ink:#FFFFFF; --ai-soft:rgba(10,132,255,.22);
-  --go:#30D158; --go-soft:rgba(48,209,88,.2);
-  --warn:#FF9F0A; --warn-soft:rgba(255,159,10,.2);
-  --bad:#FF453A; --bad-soft:rgba(255,69,58,.2);
-  --flash:#FFD60A; --flash-ink:#1C1A00;
+  --paper:#101010; --card:#1A1A19; --ink:#F2EEE4; --muted:#A39E92; --line:rgba(245,242,234,.14);
+  --fill:rgba(245,242,234,.09); --seg-on:#3A3935;
+  --obsidian:#171717; --gold:#C9AE78; --gold-ink:#C9AE78;
+  --ai:#F5F2EA; --ai-ink:#171717; --ai-soft:rgba(201,174,120,.2);
+  --go:#6DBB93; --go-soft:rgba(109,187,147,.16);
+  --warn:#E0A94E; --warn-soft:rgba(224,169,78,.18);
+  --bad:#F08A78; --bad-soft:rgba(240,138,120,.17);
+  --flash:#C9AE78; --flash-ink:#171717;
   --shadow:none;
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --paper:#000000; --card:#1C1C1E; --ink:#F2F2F7; --muted:#9A9AA0; --line:rgba(84,84,88,.5);
-  --fill:rgba(118,118,128,.24); --seg-on:#636366;
-  --ai:#0A84FF; --ai-ink:#FFFFFF; --ai-soft:rgba(10,132,255,.22);
-  --go:#30D158; --go-soft:rgba(48,209,88,.2);
-  --warn:#FF9F0A; --warn-soft:rgba(255,159,10,.2);
-  --bad:#FF453A; --bad-soft:rgba(255,69,58,.2);
-  --flash:#FFD60A; --flash-ink:#1C1A00;
+  --paper:#101010; --card:#1A1A19; --ink:#F2EEE4; --muted:#A39E92; --line:rgba(245,242,234,.14);
+  --fill:rgba(245,242,234,.09); --seg-on:#3A3935;
+  --obsidian:#171717; --gold:#C9AE78; --gold-ink:#C9AE78;
+  --ai:#F5F2EA; --ai-ink:#171717; --ai-soft:rgba(201,174,120,.2);
+  --go:#6DBB93; --go-soft:rgba(109,187,147,.16);
+  --warn:#E0A94E; --warn-soft:rgba(224,169,78,.18);
+  --bad:#F08A78; --bad-soft:rgba(240,138,120,.17);
+  --flash:#C9AE78; --flash-ink:#171717;
   --shadow:none;
   color-scheme:dark;
 }
@@ -523,3 +526,69 @@ details.tool[open] .tbody{animation:tdrop .3s ease-out both}
 .sendbtn[disabled]{opacity:.6}
 .ph .cap{left:4px;top:4px;bottom:auto;background:rgba(0,0,0,.55);padding:0 5px}
 .lbcap{font-size:17px;font-weight:600;max-width:100%;text-align:center;overflow-wrap:anywhere;padding:0 12px}
+
+/* ===== 雜誌風覆蓋：黑與象牙為主，金色只做細節 ===== */
+h1,h2,h3,.dayhead b,.brand h1,.sheet .head h2,.next h2,.tt b{font-family:var(--f-display);font-weight:700;letter-spacing:0}
+.brand h1{font-size:26px}
+.mono,.day b,.fxbox input,.rnum{font-family:var(--f-body)}
+.card{border-radius:14px}
+.btn{border-radius:10px;background:var(--fill);color:var(--ink);font-weight:600}
+.btn.primary{background:var(--obsidian);color:#F5F2EA}
+:root[data-theme="dark"] .btn.primary{background:#F5F2EA;color:#171717}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{background:#F5F2EA;color:#171717}}
+.btn.go{background:var(--go);color:#fff}
+.btn.danger{background:var(--bad-soft);color:var(--bad)}
+.btn.flash{background:var(--gold);color:#171717}
+.pill{border-radius:6px}
+.pill.ai{background:var(--ai-soft);color:var(--gold-ink)}
+.chip{border-radius:6px}
+a{color:var(--gold-ink)}
+.label{color:var(--gold-ink);font-weight:600;letter-spacing:.06em}
+.day.today::after{color:var(--gold-ink)}
+.day[aria-pressed="true"]{background:var(--obsidian);color:#F5F2EA;box-shadow:none}
+.day[aria-pressed="true"] small{color:rgba(245,242,234,.7)}
+:root[data-theme="dark"] .day[aria-pressed="true"]{background:var(--gold);color:#171717}
+:root[data-theme="dark"] .day[aria-pressed="true"] small{color:rgba(23,23,23,.7)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .day[aria-pressed="true"]{background:var(--gold);color:#171717}:root:not([data-theme="light"]) .day[aria-pressed="true"] small{color:rgba(23,23,23,.7)}}
+.tl::before{background:var(--line)}
+.tl .stop::before{border-color:var(--gold);background:var(--paper)}
+.tl .stop.visited::before{background:var(--gold);border-color:var(--gold)}
+.stop .body{border-radius:14px}
+.stop .ph2 .cov,.cov{border-radius:10px}
+.stop .tm{color:var(--gold-ink)}
+.tchip{background:rgba(23,23,23,.78);font-weight:600}
+/* 下一站：黑曜石黑卡片，金色小標 */
+.card.next{background:var(--obsidian);color:#F5F2EA;box-shadow:0 10px 28px rgba(23,23,23,.28)}
+.card.next .label{color:var(--gold)}
+.card.next .note,.card.next .ja{color:rgba(245,242,234,.72)}
+.card.next .btn{background:rgba(245,242,234,.14);color:#F5F2EA}
+.card.next .btn.primary{background:#F5F2EA;color:#171717}
+.card.next .pill.ai,.card.next .pill.go{background:rgba(185,155,98,.28);color:#F5F2EA}
+.card.next h2{font-size:26px}
+.flashcard{background:var(--gold);color:#171717;box-shadow:0 8px 24px rgba(185,155,98,.32)}
+.flashcard .label{color:#171717;opacity:.7}
+.flashcard.idle{background:var(--card);color:var(--ink)}
+.dot3.done{background:var(--gold);border-color:var(--gold);color:#171717}
+.sheet{border-radius:20px 20px 0 0;background:var(--paper)}
+.sheet .head h2{font-size:26px}
+.sheet .hero .cov{border-radius:20px 20px 0 0}
+.bul li::before{background:var(--gold)}
+.f input,.f select,.f textarea{border-radius:10px}
+/* 底部欄：金色只出現在目前頁籤 */
+.pill .tab[aria-current="page"]{color:var(--gold-ink)}
+.pill .lens::before{background:rgba(185,155,98,.2)}
+.pill .tab.add{color:var(--ink)}
+.tab[aria-current="page"]{color:var(--gold-ink)}
+/* 計時、匯率 */
+.rfg{stroke:var(--gold)}
+.pre{border-radius:12px;font-family:var(--f-body)}
+.pre.on{background:var(--obsidian);color:#F5F2EA}
+:root[data-theme="dark"] .pre.on{background:var(--gold);color:#171717}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pre.on{background:var(--gold);color:#171717}}
+.fxchip{background:var(--ai-soft);color:var(--gold-ink);border-radius:8px}
+.btn.big{border-radius:12px}
+details.tool .tico{border-radius:10px}
+.sosgrid .big{font-family:var(--f-display)}
+.banner{border-radius:12px}
+.banner.info{background:var(--ai-soft);color:var(--ink)}
+.scrim{background:rgba(23,23,23,.45)}
