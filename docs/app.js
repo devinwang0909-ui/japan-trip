@@ -704,13 +704,34 @@ async function exportAlbum(onlyMine){
 /* ---------- events ---------- */
 /* ---------- 液態玻璃底部欄 ---------- */
 const TAB_ORDER=['plan','album','__add','tools','sos'];
-let pillDrag=null,lensIdx=0;
+let lensIdx=0;
+/* 選取玻璃圈：每個畫面用彈簧物理計算位置與大小，跟著手指連續滑動；速度越快越拉長 */
+const L={x:0,tx:0,v:0,s:1,ts:1,sv:0,raf:0,last:0,inited:false,hot:-1,down:false};
 function pillEls(){const pill=$('#pill');return pill?{pill,lens:$('#lens'),tabs:[...pill.querySelectorAll('.tab')]}:null}
-function lensX(i){const e=pillEls();return e?i*(e.pill.clientWidth-10)/5:0}
+const tabW=()=>{const e=pillEls();return e?(e.pill.clientWidth-10)/5:0};
+const lensPos=i=>i*tabW();
+function applyLens(){
+  const e=pillEls(); if(!e) return;
+  const sp=Math.min(.22,Math.abs(L.v)/3500);
+  e.lens.style.transform=`translate3d(${L.x.toFixed(2)}px,0,0) scale(${(L.s*(1+sp)).toFixed(4)},${(L.s*(1-sp*.35)).toFixed(4)})`;
+  if(L.down){const c=Math.max(0,Math.min(4,Math.round(L.x/tabW())));if(c!==L.hot){L.hot=c;e.tabs.forEach((t,k)=>t.classList.toggle('hot',k===c));vib(6)}}
+}
+function stepLens(t){
+  const dt=Math.min(.032,((t-L.last)/1000)||.016); L.last=t;
+  const kx=430,cx=2*Math.sqrt(kx)*.8;
+  L.v+=(kx*(L.tx-L.x)-cx*L.v)*dt; L.x+=L.v*dt;
+  const ks=380,cs=2*Math.sqrt(ks)*.6;
+  L.sv+=(ks*(L.ts-L.s)-cs*L.sv)*dt; L.s+=L.sv*dt;
+  applyLens();
+  if(Math.abs(L.tx-L.x)<.12&&Math.abs(L.v)<1.5&&Math.abs(L.ts-L.s)<.002&&Math.abs(L.sv)<.04){L.x=L.tx;L.s=L.ts;L.v=0;L.sv=0;applyLens();L.raf=0;return}
+  L.raf=requestAnimationFrame(stepLens);
+}
+function kick(){ if(!L.raf){L.last=performance.now();L.raf=requestAnimationFrame(stepLens)} }
 function syncLens(){
   const e=pillEls(); if(!e) return;
   lensIdx=Math.max(0,TAB_ORDER.indexOf(S.tab));
-  e.lens.style.setProperty('--x',lensX(lensIdx)+'px');
+  L.tx=lensPos(lensIdx);
+  if(!L.inited){L.x=L.tx;L.inited=true;applyLens()} else if(!L.down) kick();
 }
 function tabAt(clientX){
   const {pill}=pillEls(); const r=pill.getBoundingClientRect();
@@ -718,35 +739,30 @@ function tabAt(clientX){
 }
 function initPill(){
   const e=pillEls(); if(!e) return; const {pill,lens,tabs}=e;
-  let synth=false;
+  let synth=false,downT=0;
   pill.addEventListener('click',ev=>{ if(!synth&&ev.detail>0){ev.stopPropagation();ev.preventDefault()} },true);
-  const hot=i=>tabs.forEach((t,k)=>t.classList.toggle('hot',k===i));
-  const follow=x=>{const r=pill.getBoundingClientRect();const w=(r.width-10)/5;const p=Math.max(0,Math.min(4*w,x-r.left-5-w/2));lens.style.setProperty('--x',p+'px');return tabAt(x)};
+  const fingerX=x=>{const r=pill.getBoundingClientRect();const w=(r.width-10)/5;return Math.max(0,Math.min(4*w,x-r.left-5-w/2))};
   pill.addEventListener('pointerdown',ev=>{
     if(ev.button>0) return;
     try{pill.setPointerCapture(ev.pointerId)}catch{}
-    pillDrag={t:Date.now(),idx:tabAt(ev.clientX)};
-    lens.classList.add('drag','up'); pillDrag.idx=follow(ev.clientX); hot(pillDrag.idx); vib(8);
+    L.down=true; L.hot=-1; downT=Date.now();
+    lens.classList.add('up'); L.ts=1.32; L.tx=fingerX(ev.clientX); kick(); vib(8);
   });
-  pill.addEventListener('pointermove',ev=>{
-    if(!pillDrag) return; const i=follow(ev.clientX); if(i!==pillDrag.idx){pillDrag.idx=i;hot(i);vib(6)}
-  });
+  pill.addEventListener('pointermove',ev=>{ if(!L.down) return; L.tx=fingerX(ev.clientX); kick(); });
   const end=(ev,cancel)=>{
-    if(!pillDrag) return; const d=pillDrag; pillDrag=null;
+    if(!L.down) return;
     const idx=cancel?-1:tabAt(ev.clientX);
-    const settle=()=>{
-      lens.classList.remove('up'); hot(-1);
+    setTimeout(()=>{
+      L.down=false; L.hot=-1; tabs.forEach(t=>t.classList.remove('hot'));
+      lens.classList.remove('up');
       const target=idx>=0&&TAB_ORDER[idx]!=='__add'?idx:lensIdx;
-      lens.style.setProperty('--x',lensX(target)+'px');
-      setTimeout(()=>lens.classList.remove('drag'),60);
+      L.tx=lensPos(target); L.ts=1; kick();
       if(idx>=0){synth=true;tabs[idx].dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));synth=false}
-    };
-    const wait=Math.max(0,170-(Date.now()-d.t));  // 輕點也會先放大再縮回
-    setTimeout(settle,wait);
+    },Math.max(0,170-(Date.now()-downT)));  // 輕點也會先放大再縮回
   };
   pill.addEventListener('pointerup',ev=>end(ev,false));
   pill.addEventListener('pointercancel',ev=>end(ev,true));
-  window.addEventListener('resize',syncLens);
+  window.addEventListener('resize',()=>{L.x=L.tx=lensPos(lensIdx);applyLens()});
   syncLens();
 }
 document.addEventListener('click',e=>{
