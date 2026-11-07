@@ -1,4 +1,5 @@
 {
   "TRIP_CODE": "gssi2005designbyd1ven9tangjapantripapp",
+  "ACK_URL": "https://asia-northeast1-japan-trip-d4004.cloudfunctions.net/ack",
   "SITE_URL": "https://devinwang0909-ui.github.io/japan-trip/"
 }

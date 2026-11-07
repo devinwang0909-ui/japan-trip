@@ -91,6 +91,7 @@ async function firebaseData() {
       await fs.setDoc(ref('tokens', hex + '_' + token.slice(-12).replace(/[^A-Za-z0-9]/g, '')), { name, token, updatedAt: Date.now() });
       return true;
     },
+    async ack(key) { await fs.setDoc(ref('acks', key), { at: Date.now() }); },
     onTimer(cb, err) { fs.onSnapshot(ref('meta', 'timer'), (s) => cb(s.exists() ? s.data() : null), err); },
     async setTimer(t) { await fs.setDoc(ref('meta', 'timer'), strip(t)); },
     newId() { return fs.doc(col('stops')).id; },

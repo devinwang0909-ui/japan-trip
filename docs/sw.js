@@ -1,4 +1,4 @@
-const V = 'trip-v32';
+const V = 'trip-v33';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'data.js', 'art.js', 'trip.js', 'firebase-config.js', 'manifest.webmanifest',
   'assets/t1.jpg', 'assets/t2.jpg', 'assets/t3.jpg', 'assets/t4.jpg', 'assets/t5.jpg', 'assets/t6.jpg', 'assets/kix1.jpg', 'assets/kix2.jpg', 'assets/kix3.jpg', 'assets/kix5.jpg', 'assets/icon-192.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(V).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
@@ -32,16 +32,21 @@ self.addEventListener('push', (e) => {
     if (wins.some((w) => w.visibilityState === 'visible')) return;
     await self.registration.showNotification(title, {
       body: d.body || '', tag: d.tag || 'trip', renotify: true, requireInteraction: true,
-      icon: 'assets/icon-192.png', badge: 'assets/icon-192.png', vibrate: [300, 120, 300, 120, 300], data: { url: d.url || './' },
+      icon: 'assets/icon-192.png', badge: 'assets/icon-192.png', vibrate: [400, 150, 400, 150, 400],
+      actions: [{ action: 'ack', title: '我知道了' }],
+      data: { url: d.url || './', ackKey: d.ackKey || '', ackUrl: d.ackUrl || '' },
     });
   })());
 });
+// 按「我知道了」或直接點通知，都算已讀，不再重複提醒。iPhone 不顯示按鈕，點通知本身就算。
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-  const url = (e.notification.data && e.notification.data.url) || './';
+  const { url, ackKey, ackUrl } = e.notification.data || {};
   e.waitUntil((async () => {
+    if (ackKey && ackUrl) { try { await fetch(`${ackUrl}?key=${encodeURIComponent(ackKey)}`, { mode: 'no-cors' }); } catch {} }
+    if (e.action === 'ack') return;
     const wins = await clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const w of wins) { if ('focus' in w) { await w.focus(); return; } }
-    await clients.openWindow(url);
+    await clients.openWindow(url || './');
   })());
 });

@@ -662,7 +662,7 @@ document.addEventListener('click',e=>{
   else if(d.tmr){timerAction(d.tmr)}
   else if(d.tmrpre){S.tmrMin=+d.tmrpre;const c=$('#tmrCustom');if(c)c.value=d.tmrpre;document.querySelectorAll('.pre').forEach(b=>b.classList.toggle('on',b.dataset.tmrpre===d.tmrpre))}
   else if(d.act==='push-on'){enablePush()}
-  else if(d.act==='tmr-ok'){stopRinging();$('#tmrDone')?.remove();if(S.tab==='timer')render()}
+  else if(d.act==='tmr-ok'){if(S.timer)S.db?.ack?.(`timer-${S.timer.id}-${S.timer.endsAt}`).catch(()=>{});stopRinging();$('#tmrDone')?.remove();if(S.tab==='timer')render()}
   else if(d.imgview){const m=S.stops.find(x=>x.id===d.imgview)?.floorMap;if(m)openImgView(m.src,m.caption)}
   else if(d.route){e.preventDefault();openSheet({type:'route',id:d.route})}
   else if(d.open){e.preventDefault();openSheet({type:'stop',id:d.open})}
@@ -684,8 +684,8 @@ document.addEventListener('click',e=>{
   else if(d.act==='nodel'){S.sheet.confirmDel=false;renderSheet()}
   else if(d.act==='export-all') exportAlbum(false);
   else if(d.act==='export-mine') exportAlbum(true);
-  else if(d.act==='flash-go'){$('#flashModal')?.remove();startShoot(d.key)}
-  else if(d.act==='flash-later'){$('#flashModal')?.remove()}
+  else if(d.act==='flash-go'){S.db?.ack?.('r-'+photoKeyFor(S.uid,d.key)).catch(()=>{});$('#flashModal')?.remove();startShoot(d.key)}
+  else if(d.act==='flash-later'){S.db?.ack?.('r-'+photoKeyFor(S.uid,d.key)).catch(()=>{});$('#flashModal')?.remove()}
 });
 document.addEventListener('submit',e=>{if(e.target.id==='stopForm'){e.preventDefault();submitForm(e.target)}});
 $('#cam').addEventListener('change',e=>onShot(e.target.files[0]));
@@ -701,7 +701,7 @@ function tick(){
       if(now.min>=t&&now.min<t+ONTIME_MIN&&!myPhoto(key)&&!seen[key]&&!$('#flashModal')){
         seen[key]=1;ls.set('flashSeen',seen);vib([250,120,250,120,400]);
         const m=document.createElement('div');m.id='flashModal';m.className='flashmodal';m.setAttribute('role','alertdialog');
-        m.innerHTML=`<div style="width:56px;height:56px">${I.bolt}</div><h2>隨機拍時間到！</h2><div>現在拍一張！${ONTIME_MIN} 分鐘內算準時</div><div class="mono">${hm(t)}</div><button class="btn" style="background:var(--flash-ink);color:var(--flash);border:0;font-size:18px;padding:14px 28px" data-act="flash-go" data-key="${key}">${I.cam}現在拍</button><button class="btn ghost" style="color:inherit;border-color:currentColor" data-act="flash-later">等一下</button>`;
+        m.innerHTML=`<div style="width:56px;height:56px">${I.bolt}</div><h2>隨機拍時間到！</h2><div>現在拍一張！${ONTIME_MIN} 分鐘內算準時</div><div class="mono">${hm(t)}</div><button class="btn" style="background:var(--flash-ink);color:var(--flash);border:0;font-size:18px;padding:14px 28px" data-act="flash-go" data-key="${key}">${I.cam}現在拍</button><button class="btn ghost" style="color:inherit;border-color:currentColor" data-act="flash-later" data-key="${key}">等一下</button>`;
         document.body.appendChild(m);
       }
     });
